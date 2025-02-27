@@ -41,6 +41,7 @@ $diretorController = new DiretorController($pdo, $authController);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Visualizar Grupo</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <style>
         /* Reset e estilos gerais */
         * {
@@ -328,10 +329,10 @@ $diretorController = new DiretorController($pdo, $authController);
     </style>
 <body>
 <div class="sidebar">
-    <a href="/sistema_produtividade/public/dashboard-diretor">Início</a>
-    <a href="/sistema_produtividade/public/manage-groups">Gerenciar Grupos</a>
-    <a href="/sistema_produtividade/public/create-group">Criar Grupo</a>
-    <a href="/sistema_produtividade/public/assign-user-group">Atribuir Usuário a Grupo</a>
+    <a href="/sistema_produtividade/public/dashboard-diretor"><i class="fas fa-home"></i> Início</a>
+    <a href="/sistema_produtividade/public/manage-groups"><i class="fas fa-users-cog"></i> Gerenciar Grupos</a>
+    <a href="/sistema_produtividade/public/create-group"><i class="fas fa-plus-circle"></i> Criar Grupo</a>
+    <a href="/sistema_produtividade/public/assign-user-group"><i class="fas fa-user-plus"></i> Atribuir Usuário a Grupo</a>
 </div>
 <div class="main-content">
     <div class="header">

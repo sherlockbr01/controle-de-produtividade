@@ -15,15 +15,15 @@ $hasGroup = !empty($userGroup);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard do Servidor - Sistema de Produtividade</title>
     <link rel="stylesheet" href="/sistema_produtividade/public/css/dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 <div class="dashboard-container">
     <div class="sidebar">
-        <a href="/sistema_produtividade/public/dashboard-servidor">Início</a>
-        <a href="/sistema_produtividade/public/registrar-produtividade">Registrar Produtividade</a>
-        <a href="/sistema_produtividade/public/meu-grupo" data-has-group="<?php echo $hasGroup ? 'true' : 'false'; ?>">Meu Grupo</a>
-        <a href="/sistema_produtividade/public/informar-ferias">Informar Férias</a>
+        <a href="/sistema_produtividade/public/registrar-produtividade"><i class="fas fa-clipboard-list"></i> Registrar Produtividade</a>
+        <a href="/sistema_produtividade/public/meu-grupo" data-has-group="<?php echo $hasGroup ? 'true' : 'false'; ?>"><i class="fas fa-users under-construction"></i> Meu Grupo</a>
+        <a href="/sistema_produtividade/public/informar-ferias"><i class="fas fa-calendar-alt"></i> Informar Férias</a>
     </div>
     <div class="main-content">
         <div class="header">

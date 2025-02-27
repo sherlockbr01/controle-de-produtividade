@@ -9,6 +9,7 @@ $authController->requireDirectorAuth();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Atribuir Usuário a Grupo</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <style>
         /* Reset e estilos gerais */
         * {
@@ -205,9 +206,9 @@ $authController->requireDirectorAuth();
 <body>
 <nav>
     <ul>
-        <li><a href="/sistema_produtividade/public/dashboard-diretor">Início</a></li>
-        <a href="/sistema_produtividade/public/manage-groups">Gerenciar Grupos</a>
-        <li><a href="/sistema_produtividade/public/create-group">Criar Grupo</a></li>
+        <li><a href="/sistema_produtividade/public/dashboard-diretor"><i class="fas fa-home icon"></i> Início</a></li>
+        <li><a href="/sistema_produtividade/public/create-group"><i class="fas fa-plus-circle icon"></i> Criar Grupo</a></li>
+        <li><a href="/sistema_produtividade/public/manage-groups"><i class="fas fa-users icon"></i> Gerenciar Grupos</a></li>
     </ul>
 </nav>
 <div class="main-content">

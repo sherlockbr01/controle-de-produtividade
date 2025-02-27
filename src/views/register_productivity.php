@@ -25,6 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registrar Produtividade</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <style>
         /* Reset e estilos gerais */
         * {
@@ -250,9 +251,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
 <div class="sidebar">
-    <a href="/sistema_produtividade/public/inicio">Início</a>
-    <a href="/sistema_produtividade/public/visualizar-historico">Visualizar Histórico</a>
-    <a href="/sistema_produtividade/public/meu-grupo" data-has-group="<?php echo $hasGroup ? 'true' : 'false'; ?>">Meu Grupo</a>
+    <a href="/sistema_produtividade/public/inicio"><i class="fas fa-home"></i> Início</a>
+    <a href="/sistema_produtividade/public/visualizar-historico"><i class="fas fa-history"></i> Visualizar Histórico</a>
+    <a href="/sistema_produtividade/public/meu-grupo" data-has-group="<?php echo $hasGroup ? 'true' : 'false'; ?>"><i class="fas fa-users"></i> Meu Grupo</a>
 </div>
 <div class="main-content">
     <?php
@@ -316,7 +317,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <h2>Adicionar Tipo de Minuta</h2>
         <form id="addMinuteForm">
             <input type="text" id="new_minute_type" name="new_minute_type" placeholder="Novo Tipo de Minuta" required>
-            <button type="button" onclick="addMinuteType()">Adicionar</button>
+            <button type="button" id="addMinuteButton">Adicionar</button>
         </form>
     </div>
 </div>
@@ -331,24 +332,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     function addMinuteType() {
-        var newMinuteType = document.getElementById('new_minute_type').value;
+        var newMinuteType = document.getElementById('new_minute_type').value.trim();
         if (newMinuteType) {
+            var select = document.getElementById('minute_type_id');
+
+            // Verifica se o tipo de minuta já existe
+            for (var i = 0; i < select.options.length; i++) {
+                if (select.options[i].text.toLowerCase() === newMinuteType.toLowerCase()) {
+                    alert('Este tipo de minuta já existe.');
+                    closeModal('minuteModal');
+                    select.value = select.options[i].value; // Seleciona a opção existente
+                    document.getElementById('new_minute_type').value = '';
+                    return;
+                }
+            }
+
+            // Desabilita o botão para evitar múltiplos cliques
+            var addButton = document.getElementById('addMinuteButton');
+            addButton.disabled = true;
+
             var xhr = new XMLHttpRequest();
             xhr.open('POST', '/sistema_produtividade/public/add-minute-type', true);
             xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
             xhr.onreadystatechange = function() {
-                if (xhr.readyState === 4 && xhr.status === 200) {
-                    var response = JSON.parse(xhr.responseText);
-                    if (response.success) {
-                        closeModal('minuteModal');
-                        var select = document.getElementById('minute_type_id');
-                        var option = document.createElement('option');
-                        option.value = response.id;
-                        option.text = newMinuteType;
-                        select.add(option);
-                        document.getElementById('new_minute_type').value = '';
+                if (xhr.readyState === 4) {
+                    addButton.disabled = false; // Re-habilita o botão
+                    if (xhr.status === 200) {
+                        try {
+                            var response = JSON.parse(xhr.responseText);
+                            if (response.success) {
+                                closeModal('minuteModal');
+                                var option = document.createElement('option');
+                                option.value = response.id;
+                                option.text = newMinuteType;
+                                select.add(option);
+                                select.value = response.id; // Seleciona a nova opção
+                                document.getElementById('new_minute_type').value = '';
+                            } else {
+                                alert('Erro ao adicionar tipo de minuta: ' + response.message);
+                            }
+                        } catch (e) {
+                            console.error('Erro ao processar resposta:', e);
+                            alert('Erro ao processar resposta do servidor.');
+                        }
                     } else {
-                        alert('Erro ao adicionar tipo de minuta: ' + response.message);
+                        console.error('Erro na requisição:', xhr.status);
+                        alert('Erro ao comunicar com o servidor. Por favor, tente novamente.');
                     }
                 }
             };
@@ -358,21 +387,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
+    // Evento de clique do botão
+    document.getElementById('addMinuteButton').addEventListener('click', function(e) {
+        e.preventDefault(); // Previne o comportamento padrão do botão
+        addMinuteType();
+    });
+
+    // Prevenir o envio do formulário ao pressionar Enter no modal
+    document.getElementById('addMinuteForm').onkeypress = function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            addMinuteType();
+        }
+    };
+
     // Fechar o modal quando clicar fora dele
     window.onclick = function(event) {
         if (event.target.className === 'modal') {
             event.target.style.display = "none";
         }
-    }
-
-    // Prevenir o envio do formulário ao pressionar Enter no modal
-    document.getElementById('addMinuteForm').onkeypress = function(e) {
-        var key = e.charCode || e.keyCode || 0;
-        if (key == 13) {
-            e.preventDefault();
-            addMinuteType();
-        }
-    }
+    };
 </script>
 
 </body>

@@ -166,15 +166,30 @@ class ServidorController {
             $userId = $_SESSION['user_id'];
 
             if ($minuteTypeName) {
-                $stmt = $this->db->prepare("INSERT INTO minute_types (name, user_id) VALUES (?, ?)");
-                $stmt->execute([$minuteTypeName, $userId]);
-                return ['success' => true];
+                try {
+                    $stmt = $this->db->prepare("INSERT INTO minute_types (name, user_id) VALUES (?, ?)");
+                    $stmt->execute([$minuteTypeName, $userId]);
+                    $newId = $this->db->lastInsertId();
+
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => true, 'id' => $newId]);
+                    exit;
+                } catch (PDOException $e) {
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => false, 'message' => 'Erro ao adicionar tipo de minuta: ' . $e->getMessage()]);
+                    exit;
+                }
             } else {
-                return ['error' => 'Nome do tipo de minuta é obrigatório.'];
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'message' => 'Nome do tipo de minuta é obrigatório.']);
+                exit;
             }
         }
-    }
 
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'message' => 'Método não permitido.']);
+        exit;
+    }
     public function getAssignedGroup($userId) {
         try {
             $stmt = $this->db->prepare("

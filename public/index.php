@@ -107,16 +107,8 @@ try {
             break;
 
         case 'add-minute-type':
-            $authController->requireServerAuth();
-            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-                $result = $servidorController->addMinuteType();
-                if ($result['success']) {
-                    echo json_encode(['success' => true]);
-                } else {
-                    echo json_encode(['success' => false, 'error' => $result['error']]);
-                }
-            }
-            exit;
+            $servidorController->addMinuteType();
+            break;
 
         case 'add-decision-type':
             $authController->requireServerAuth();

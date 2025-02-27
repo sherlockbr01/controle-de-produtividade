@@ -35,7 +35,9 @@ $dashboardData = $diretorController->dashboard();
 <body>
 <div class="dashboard-container">
     <div class="sidebar">
-        <a href="/sistema_produtividade/public/manage-groups">Gerenciar Grupos</a>
+        <a href="/sistema_produtividade/public/manage-groups">
+            <i class="fas fa-users"></i> Gerenciar Grupos
+        </a>
         <a href="/sistema_produtividade/public/generate-reports">
             <i class="fas fa-tools"></i> Gerar Relatórios
         </a>

@@ -40,13 +40,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Criar Novo Grupo</title>
     <link rel="stylesheet" href="/sistema_produtividade/public/css/create_group.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+
 </head>
 <body>
 <div class="dashboard-container">
     <div class="sidebar">
-        <a href="/sistema_produtividade/public/dashboard-servidor">Início</a>
-        <a href="/sistema_produtividade/public/manage-groups">Gerenciar Grupos</a>
-        <a href="/sistema_produtividade/public/assign-user-group">Atribuir Usuário a Grupo </a>
+        <a href="/sistema_produtividade/public/dashboard-servidor"><i class="fas fa-home icon"></i> Início</a>
+        <a href="/sistema_produtividade/public/manage-groups"><i class="fas fa-users icon"></i> Gerenciar Grupos</a>
+        <a href="/sistema_produtividade/public/assign-user-group"><i class="fas fa-user-plus icon"></i> Atribuir Usuário a Grupo</a>
     </div>
     <div class="main-content">
         <header class="header">

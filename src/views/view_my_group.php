@@ -32,6 +32,7 @@ if ($groupData && isset($groupData['users'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Meu Grupo</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <style>
         /* Reset e estilos gerais */
         * {
@@ -244,9 +245,9 @@ if ($groupData && isset($groupData['users'])) {
 </head>
 <body>
 <div class="sidebar">
-    <a href="/sistema_produtividade/public/inicio">Início</a>
-    <a href="/sistema_produtividade/public/registrar-produtividade">Registrar Produtividade</a>
-    <a href="/sistema_produtividade/public/informar-férias">Informar Férias</a>
+    <a href="/sistema_produtividade/public/inicio"><i class="fas fa-home"></i> Início</a>
+    <a href="/sistema_produtividade/public/registrar-produtividade"><i class="fas fa-clipboard-list"></i> Registrar Produtividade</a>
+    <a href="/sistema_produtividade/public/informar-férias"><i class="fas fa-calendar-alt"></i> Informar Férias</a>
 </div>
 <div class="main-content">
     <div class="header">
