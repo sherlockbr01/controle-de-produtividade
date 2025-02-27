@@ -50,12 +50,7 @@ class ServidorController {
                 $processNumber = $_POST['process_number'] ?? '';
                 $minuteTypeId = $_POST['minute_type_id'] ?? '';
                 $decisionTypeId = $_POST['decision_type_id'] ?? '';
-                $points = filter_var($_POST['points'] ?? 0, FILTER_VALIDATE_INT);
                 $date = $_POST['date'] ?? date('Y-m-d');
-
-                if ($points === false) {
-                    throw new Exception("Valor de pontos inválido.");
-                }
 
                 $productivity = new Productivity($this->db);
 
@@ -66,6 +61,17 @@ class ServidorController {
                 if (!$productivity->decisionTypeExists($decisionTypeId)) {
                     throw new Exception("Tipo de decisão inválido.");
                 }
+
+                // Buscar os pontos da tabela decision_types
+                $stmt = $this->db->prepare("SELECT points FROM decision_types WHERE id = :id");
+                $stmt->execute(['id' => $decisionTypeId]);
+                $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                if (!$result) {
+                    throw new Exception("Pontos não encontrados para o tipo de decisão selecionado.");
+                }
+
+                $points = $result['points'];
 
                 if ($productivity->registerActivity($userId, $processNumber, $minuteTypeId, $decisionTypeId, $points, $date)) {
                     $_SESSION['success_message'] = 'Produtividade registrada com sucesso.';
@@ -226,11 +232,10 @@ class ServidorController {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $decisionTypeName = $_POST['new_decision_type'] ?? '';
             $points = $_POST['points'] ?? 0;
-            $userId = $_SESSION['user_id'];
 
             if ($decisionTypeName) {
-                $stmt = $this->db->prepare("INSERT INTO decision_types (name, points, user_id) VALUES (?, ?, ?)");
-                $stmt->execute([$decisionTypeName, $points, $userId]);
+                $stmt = $this->db->prepare("INSERT INTO decision_types (name, points) VALUES (?, ?)");
+                $stmt->execute([$decisionTypeName, $points]);
                 return ['success' => true];
             } else {
                 return ['error' => 'Nome do tipo de decisão é obrigatório.'];

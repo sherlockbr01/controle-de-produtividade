@@ -189,4 +189,17 @@ class DiretorController {
             'endDate' => $endDate
         ];
     }
+    public function removeUserFromGroup($userId, $groupId) {
+        $groupModel = new Group($this->pdo);
+        try {
+            if ($groupModel->removeUserFromGroup($userId, $groupId)) {
+                return ['success' => true, 'message' => 'Usuário removido do grupo com sucesso.'];
+            } else {
+                return ['success' => false, 'error' => 'Falha ao remover usuário do grupo. O usuário pode não estar no grupo ou pode ter ocorrido um erro no banco de dados.'];
+            }
+        } catch (\Exception $e) {
+            return ['success' => false, 'error' => 'Erro ao remover usuário do grupo: ' . $e->getMessage()];
+        }
+    }
+
 }

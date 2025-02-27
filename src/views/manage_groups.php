@@ -203,6 +203,59 @@ $allGroups = $groupController->getAllGroups();
             background-color: #f44336; /* Vermelho */
             color: white;
         }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+
+        .modal-content {
+            background-color: #2f3136;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 90%;
+            max-width: 400px; /* Reduzido de 500px para 400px */
+            border-radius: 5px;
+        }
+        .modal-content h2 {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .modal-content p {
+            font-size: 1em;
+            margin-bottom: 15px;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .modal-actions button {
+            margin-left: 10px;
+        }
+
+        .btn-cancel {
+            background-color: #7289da;
+            color: white;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .btn-cancel:hover {
+            background-color: #677bc4;
+        }
     </style>
 </head>
 <body>
@@ -253,29 +306,72 @@ $allGroups = $groupController->getAllGroups();
                     </div>
                     <div class="group-actions">
                         <a href="/sistema_produtividade/public/visualizar-grupo-diretor?id=<?php echo htmlspecialchars($group['id']); ?>" class="btn-view">Ver Grupo</a>
-                        <form action="/sistema_produtividade/public/delete-group" method="post" style="display:inline;">
-                            <input type="hidden" name="group_id" value="<?php echo htmlspecialchars($group['id']); ?>">
-                            <button type="submit" class="btn-delete">Excluir Grupo</button>
-                        </form>
+                        <button class="btn-delete" onclick="confirmDelete(<?php echo htmlspecialchars($group['id']); ?>, '<?php echo htmlspecialchars($group['name']); ?>')">Excluir Grupo</button>
                     </div>
                 </li>
             <?php endforeach; ?>
         </ul>
     </div>
-</div>
 
-<script>
-    // Faz a mensagem de sucesso ou erro desaparecer após 5 segundos
-    setTimeout(function() {
-        var successMessage = document.getElementById('success-message');
-        var errorMessage = document.getElementById('error-message');
-        if (successMessage) {
-            successMessage.style.display = 'none';
+    <!-- Modal de confirmação -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content">
+            <h2>Confirmar Exclusão</h2>
+            <p>Tem certeza que deseja excluir o grupo "<span id="groupName"></span>"?</p>
+            <div class="modal-actions">
+                <button id="confirmDelete" class="btn-delete">Sim, Excluir</button>
+                <button id="cancelDelete" class="btn-cancel">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Faz a mensagem de sucesso ou erro desaparecer após 5 segundos
+        setTimeout(function() {
+            var successMessage = document.getElementById('success-message');
+            var errorMessage = document.getElementById('error-message');
+            if (successMessage) {
+                successMessage.style.display = 'none';
+            }
+            if (errorMessage) {
+                errorMessage.style.display = 'none';
+            }
+        }, 5000);
+
+        // Função para abrir o modal de confirmação
+        function confirmDelete(groupId, groupName) {
+            var modal = document.getElementById('confirmModal');
+            var groupNameSpan = document.getElementById('groupName');
+            var confirmButton = document.getElementById('confirmDelete');
+            var cancelButton = document.getElementById('cancelDelete');
+
+            groupNameSpan.textContent = groupName;
+            modal.style.display = 'block';
+
+            confirmButton.onclick = function() {
+                // Enviar solicitação de exclusão
+                var form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/sistema_produtividade/public/delete-group';
+                var input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'group_id';
+                input.value = groupId;
+                form.appendChild(input);
+                document.body.appendChild(form);
+                form.submit();
+            };
+
+            cancelButton.onclick = function() {
+                modal.style.display = 'none';
+            };
+
+            window.onclick = function(event) {
+                if (event.target == modal) {
+                    modal.style.display = 'none';
+                }
+            };
         }
-        if (errorMessage) {
-            errorMessage.style.display = 'none';
-        }
-    }, 5000);
-</script>
+    </script>
 </body>
 </html>

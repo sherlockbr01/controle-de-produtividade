@@ -292,19 +292,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </select>
             </div>
             <div class="form-group">
-                <label for="decision_type_id">Tipo de Decisão:
-                    <span class="add-button" onclick="openModal('decisionModal')">+</span>
-                </label>
+                <label for="decision_type_id">Tipo de Decisão:</label>
                 <select id="decision_type_id" name="decision_type_id" required>
                     <option value="">Selecione o tipo de decisão</option>
                     <?php foreach ($productivityData['decisionTypes'] as $id => $decisionType): ?>
                         <option value="<?php echo htmlspecialchars($id, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($decisionType, ENT_QUOTES, 'UTF-8'); ?></option>
                     <?php endforeach; ?>
                 </select>
-            </div>
-            <div class="form-group">
-                <label for="points">Pontos:</label>
-                <input type="number" id="points" name="points" required min="0">
             </div>
             <div class="form-group">
                 <label for="date">Data:</label>
@@ -315,7 +309,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </form>
 </div>
 
-<!-- Modals -->
+<!-- Modal para Tipo de Minuta -->
 <div id="minuteModal" class="modal">
     <div class="modal-content">
         <span class="close" onclick="closeModal('minuteModal')">&times;</span>
@@ -323,17 +317,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <form id="addMinuteForm">
             <input type="text" id="new_minute_type" name="new_minute_type" placeholder="Novo Tipo de Minuta" required>
             <button type="button" onclick="addMinuteType()">Adicionar</button>
-        </form>
-    </div>
-</div>
-
-<div id="decisionModal" class="modal">
-    <div class="modal-content">
-        <span class="close" onclick="closeModal('decisionModal')">&times;</span>
-        <h2>Adicionar Tipo de Decisão</h2>
-        <form id="addDecisionForm">
-            <input type="text" id="new_decision_type" name="new_decision_type" placeholder="Novo Tipo de Decisão" required>
-            <button type="button" onclick="addDecisionType()">Adicionar</button>
         </form>
     </div>
 </div>
@@ -375,34 +358,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    function addDecisionType() {
-        var newDecisionType = document.getElementById('new_decision_type').value;
-        if (newDecisionType) {
-            var xhr = new XMLHttpRequest();
-            xhr.open('POST', '/sistema_produtividade/public/add-decision-type', true);
-            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-            xhr.onreadystatechange = function() {
-                if (xhr.readyState === 4 && xhr.status === 200) {
-                    var response = JSON.parse(xhr.responseText);
-                    if (response.success) {
-                        closeModal('decisionModal');
-                        var select = document.getElementById('decision_type_id');
-                        var option = document.createElement('option');
-                        option.value = response.id;
-                        option.text = newDecisionType;
-                        select.add(option);
-                        document.getElementById('new_decision_type').value = '';
-                    } else {
-                        alert('Erro ao adicionar tipo de decisão: ' + response.message);
-                    }
-                }
-            };
-            xhr.send('new_decision_type=' + encodeURIComponent(newDecisionType));
-        } else {
-            alert('Por favor, preencha o campo do tipo de decisão.');
-        }
-    }
-
     // Fechar o modal quando clicar fora dele
     window.onclick = function(event) {
         if (event.target.className === 'modal') {
@@ -410,7 +365,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    // Prevenir o envio do formulário ao pressionar Enter nos modais
+    // Prevenir o envio do formulário ao pressionar Enter no modal
     document.getElementById('addMinuteForm').onkeypress = function(e) {
         var key = e.charCode || e.keyCode || 0;
         if (key == 13) {
@@ -418,15 +373,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             addMinuteType();
         }
     }
-
-    document.getElementById('addDecisionForm').onkeypress = function(e) {
-        var key = e.charCode || e.keyCode || 0;
-        if (key == 13) {
-            e.preventDefault();
-            addDecisionType();
-        }
-    }
 </script>
 
-    </body>
+</body>
 </html>

@@ -209,6 +209,25 @@ try {
             require __DIR__ . '/../src/views/assign_user_group.php';
             break;
 
+        case 'remove-user-from-group':
+            $authController->requireDirectorAuth();
+            $userId = filter_input(INPUT_GET, 'user_id', FILTER_SANITIZE_NUMBER_INT);
+            $groupId = filter_input(INPUT_GET, 'group_id', FILTER_SANITIZE_NUMBER_INT);
+            if ($userId && $groupId) {
+                $result = $diretorController->removeUserFromGroup($userId, $groupId);
+                if ($result['success']) {
+                    $_SESSION['success_message'] = "Usuário removido do grupo com sucesso.";
+                } else {
+                    $_SESSION['error_message'] = $result['error'] ?? "Erro ao remover usuário do grupo.";
+                }
+            } else {
+                $_SESSION['error_message'] = "ID do usuário ou do grupo não fornecido.";
+            }
+            // Redirecionar de volta para a página do grupo
+            header("Location: /sistema_produtividade/public/visualizar-grupo-diretor?id=" . $groupId);
+            exit;
+
+
         case 'meu-grupo':
             $authController->requireAuth();
             $userId = $_SESSION['user_id'];

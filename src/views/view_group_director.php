@@ -84,21 +84,29 @@ $diretorController = new DiretorController($pdo, $authController);
         /* Cabeçalho */
         .header {
             display: flex;
-            justify-content: center;
+            justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
+            position: fixed;
+            top: 0;
+            left: 250px;
+            right: 0;
+            background-color: #36393f;
+            padding: 20px;
+            z-index: 1000;
         }
 
         .header h1 {
             font-size: 24px;
             color: #ffffff;
+            margin: 0;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
         }
 
         .user-info {
-            position: absolute;
-            right: 20px;
-            display: flex;
-            align-items: center;
+            margin-left: auto;
         }
 
         .user-info span {
@@ -122,8 +130,9 @@ $diretorController = new DiretorController($pdo, $authController);
         /* Conteúdo principal */
         .main-content {
             margin-left: 250px;
-            padding: 20px;
+            padding: 80px 20px 20px;
             flex-grow: 1;
+            position: relative;
         }
 
         /* Estilos para os cartões */
@@ -139,9 +148,9 @@ $diretorController = new DiretorController($pdo, $authController);
             background-color: #2f3136;
             padding: 15px;
             border-radius: 8px;
-            width: calc(33.33% - 20px); /* Ajusta para 3 cartões por linha com espaçamento */
-            min-width: 250px; /* Largura mínima para evitar cartões muito estreitos */
-            max-width: 350px; /* Largura máxima para manter consistência */
+            width: calc(33.33% - 20px);
+            min-width: 250px;
+            max-width: 350px;
             text-align: center;
             display: flex;
             flex-direction: column;
@@ -151,14 +160,14 @@ $diretorController = new DiretorController($pdo, $authController);
 
         .total-summary-cards {
             display: flex;
-            gap: 37px; /* Ajuste o espaçamento aqui */
+            gap: 37px;
             justify-content: center;
             margin-top: 20px;
         }
 
         .total-points-card, .total-processes-card {
-            width: 50%; /* Ajusta a largura do cartão */
-            max-width: 400px; /* Define uma largura máxima */
+            width: 50%;
+            max-width: 400px;
             margin: 0 auto;
             background-color: #2f3136;
             padding: 20px;
@@ -249,8 +258,74 @@ $diretorController = new DiretorController($pdo, $authController);
             margin-top: 20px;
             font-size: 18px;
         }
+
+        .btn-remove {
+            background-color: #e74c3c;
+            color: #fff;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            margin-top: 10px;
+            display: inline-block;
+            width: auto;
+        }
+
+        .btn-remove:hover {
+            background-color: #c0392b;
+        }
+
+        .success-message {
+            background-color: #28a745;
+            color: #ffffff;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1001;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: #2f3136;
+            margin: 15% auto;
+            padding: 20px;
+            border-radius: 5px;
+            width: 300px;
+            text-align: center;
+        }
+
+        .modal-buttons {
+            margin-top: 20px;
+        }
+
+        .modal-buttons button {
+            margin: 0 10px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #confirmYes {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        #confirmNo {
+            background-color: #7289da;
+            color: white;
+        }
     </style>
-</head>
 <body>
 <div class="sidebar">
     <a href="/sistema_produtividade/public/dashboard-diretor">Início</a>
@@ -266,6 +341,13 @@ $diretorController = new DiretorController($pdo, $authController);
             <a href="/sistema_produtividade/public/logout" class="btn-logout">Sair</a>
         </div>
     </div>
+
+    <?php if (isset($_SESSION['success_message'])): ?>
+        <div class="success-message" id="success-message">
+            <?= htmlspecialchars($_SESSION['success_message']); ?>
+        </div>
+        <?php unset($_SESSION['success_message']); ?>
+    <?php endif; ?>
 
     <?php if (!$groupData || !isset($groupData['group'])): ?>
         <div class="error-message">Grupo não encontrado.</div>
@@ -291,6 +373,9 @@ $diretorController = new DiretorController($pdo, $authController);
                                 <p class="big-number"><?php echo number_format($user['completed_processes'] ?? 0); ?></p>
                             </div>
                         </div>
+                        <div class="btn-container">
+                            <button class="btn-remove" data-user-id="<?php echo $user['id']; ?>" data-group-id="<?php echo $groupData['group']['id']; ?>">Remover do Grupo</button>
+                        </div>
                     </div>
                 <?php endforeach; ?>
             <?php else: ?>
@@ -310,5 +395,59 @@ $diretorController = new DiretorController($pdo, $authController);
         </div>
     <?php endif; ?>
 </div>
+
+<!-- Modal de confirmação -->
+<div id="confirmModal" class="modal">
+    <div class="modal-content">
+        <p>Deseja realmente remover o usuário do grupo?</p>
+        <div class="modal-buttons">
+            <button id="confirmYes">Sim</button>
+            <button id="confirmNo">Não</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Faz a mensagem de sucesso desaparecer após 5 segundos
+    setTimeout(function() {
+        var successMessage = document.getElementById('success-message');
+        if (successMessage) {
+            successMessage.style.display = 'none';
+        }
+    }, 5000);
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const modal = document.getElementById('confirmModal');
+        const btnsRemove = document.querySelectorAll('.btn-remove');
+        const btnYes = document.getElementById('confirmYes');
+        const btnNo = document.getElementById('confirmNo');
+        let currentUserId, currentGroupId;
+
+        btnsRemove.forEach(btn => {
+            btn.addEventListener('click', function() {
+                currentUserId = this.getAttribute('data-user-id');
+                currentGroupId = this.getAttribute('data-group-id');
+                modal.style.display = 'block';
+            });
+        });
+
+        btnYes.addEventListener('click', function() {
+            // Redirecionar para a página de remoção do usuário
+            window.location.href = `/sistema_produtividade/public/remove-user-from-group?user_id=${currentUserId}&group_id=${currentGroupId}`;
+        });
+
+        btnNo.addEventListener('click', function() {
+            modal.style.display = 'none';
+        });
+
+        // Fecha o modal ao clicar fora dele
+        window.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+    });
+</script>
+
 </body>
 </html>

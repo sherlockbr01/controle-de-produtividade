@@ -146,22 +146,48 @@ class Productivity
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function registerActivity($userId, $processNumber, $minuteTypeId, $decisionTypeId, $points, $date)
+    public function registerActivity($userId, $processNumber, $minuteTypeId, $decisionTypeId, $date)
     {
-        $sql = "INSERT INTO productivity (user_id, process_number, minute_type_id, decision_type_id, points, date) 
-        VALUES (:user_id, :process_number, :minute_type_id, :decision_type_id, :points, :date)";
+        try {
+            $this->db->beginTransaction();
 
-        $stmt = $this->db->prepare($sql);
-        $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
-        $stmt->bindParam(':process_number', $processNumber, PDO::PARAM_STR);
-        $stmt->bindParam(':minute_type_id', $minuteTypeId, PDO::PARAM_INT);
-        $stmt->bindParam(':decision_type_id', $decisionTypeId, PDO::PARAM_INT);
-        $stmt->bindParam(':points', $points, PDO::PARAM_INT);
-        $stmt->bindParam(':date', $date, PDO::PARAM_STR);
+            // Buscar os pontos associados ao tipo de decisão
+            $stmtPoints = $this->db->prepare("SELECT points FROM decision_types WHERE id = ?");
+            $stmtPoints->execute([$decisionTypeId]);
+            $result = $stmtPoints->fetch(PDO::FETCH_ASSOC);
 
-        return $stmt->execute();
+            if (!$result) {
+                throw new Exception("Tipo de decisão não encontrado.");
+            }
+
+            $points = $result['points'];
+
+            // Inserir a atividade com os pontos extraídos
+            $sql = "INSERT INTO productivity (user_id, process_number, minute_type_id, decision_type_id, points, date) 
+                VALUES (:user_id, :process_number, :minute_type_id, :decision_type_id, :points, :date)";
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
+            $stmt->bindParam(':process_number', $processNumber, PDO::PARAM_STR);
+            $stmt->bindParam(':minute_type_id', $minuteTypeId, PDO::PARAM_INT);
+            $stmt->bindParam(':decision_type_id', $decisionTypeId, PDO::PARAM_INT);
+            $stmt->bindParam(':points', $points, PDO::PARAM_INT);
+            $stmt->bindParam(':date', $date, PDO::PARAM_STR);
+
+            $result = $stmt->execute();
+
+            if (!$result) {
+                throw new Exception("Falha ao inserir a atividade.");
+            }
+
+            $this->db->commit();
+            return true;
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            error_log("Erro ao registrar atividade: " . $e->getMessage());
+            return false;
+        }
     }
-
     public function getMinuteTypes($userId)
     {
         $sql = "SELECT id, name FROM minute_types WHERE user_id = :user_id";
@@ -171,11 +197,10 @@ class Productivity
         return $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
     }
 
-    public function getDecisionTypes($userId)
+    public function getDecisionTypes()
     {
-        $sql = "SELECT id, name FROM decision_types WHERE user_id = :user_id";
+        $sql = "SELECT id, name FROM decision_types";
         $stmt = $this->db->prepare($sql);
-        $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
     }

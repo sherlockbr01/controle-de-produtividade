@@ -107,6 +107,14 @@ class Group {
         return $stmt->execute(['user_id' => $userId]);
     }
 
+    public function removeUserFromGroup($userId, $groupId) {
+        $stmt = $this->db->prepare("DELETE FROM group_users WHERE user_id = :userId AND group_id = :groupId");
+        return $stmt->execute([
+            ':userId' => $userId,
+            ':groupId' => $groupId
+        ]);
+    }
+
 
     public function addUserToGroup($userId, $groupId) {
         // Primeiro, remova o usuário de todos os grupos
