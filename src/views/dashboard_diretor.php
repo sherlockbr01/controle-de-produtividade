@@ -17,10 +17,35 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'diretor') {
     header('Location: /sistema_produtividade/public/');
     exit;
 }
+// Definir os itens de menu para esta página
+$menuItems = [
+    [
+        'url' => '/sistema_produtividade/public/dashboard-diretor',
+        'icon' => 'fas fa-tachometer-alt',
+        'text' => 'Dashboard'
+    ],
+    [
+        'url' => '/sistema_produtividade/public/manage-groups',
+        'icon' => 'fas fa-users',
+        'text' => 'Gerenciar Grupos'
+    ],
+    [
+        'url' => '/sistema_produtividade/public/generate-reports',
+        'icon' => 'fas fa-tools',
+        'text' => 'Gerar Relatórios'
+    ],
+    [
+        'url' => '/sistema_produtividade/public/gerenciar-ferias-afastamento',
+        'icon' => 'fas fa-calendar-alt',
+        'text' => 'Gerenciar Férias e Afastamentos'
+    ]
+];
 
 // Lógica para buscar os dados de produtividade
 $diretorController = new DiretorController($pdo, $authController);
 $dashboardData = $diretorController->dashboard();
+
+
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -41,8 +66,8 @@ $dashboardData = $diretorController->dashboard();
         <a href="/sistema_produtividade/public/generate-reports">
             <i class="fas fa-tools"></i> Gerar Relatórios
         </a>
-        <a href="/sistema_produtividade/public/informar-ferias">
-            <i class="fas fa-tools"></i> Informa Ferias
+        <a href="/sistema_produtividade/public/gerenciar-ferias-afastamento">
+            <i class="fas fa-calendar-alt"></i> Gerenciar Férias e Afastamentos
         </a>
     </div>
     <div class="main-content">

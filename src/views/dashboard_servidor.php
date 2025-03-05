@@ -23,7 +23,7 @@ $hasGroup = !empty($userGroup);
     <div class="sidebar">
         <a href="/sistema_produtividade/public/registrar-produtividade"><i class="fas fa-clipboard-list"></i> Registrar Produtividade</a>
         <a href="/sistema_produtividade/public/meu-grupo" data-has-group="<?php echo $hasGroup ? 'true' : 'false'; ?>"><i class="fas fa-users under-construction"></i> Meu Grupo</a>
-        <a href="/sistema_produtividade/public/informar-ferias"><i class="fas fa-calendar-alt"></i> Informar Férias</a>
+        <a href="/sistema_produtividade/public/gestao-ferias-afastamentos"><i class="fas fa-calendar-alt"></i> Férias e Afastamentos</a>
     </div>
     <div class="main-content">
         <div class="header">

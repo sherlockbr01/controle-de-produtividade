@@ -1,0 +1,62 @@
+.header {
+    position: fixed;
+    top: 0;
+    left: 250px; /* Alinha com a largura da sidebar */
+    right: 0;
+    height: 60px; /* Altura fixa para o header */
+    background-color: #36393f;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    z-index: 999; /* Menor que o z-index do sidebar para ficar abaixo dele */
+}
+
+.header h1 {
+    font-size: 1.5em;
+    color: #ffffff;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+}
+
+.user-info span {
+    margin-right: 15px;
+    font-weight: bold;
+}
+
+.btn-logout {
+    background-color: #e74c3c;
+    color: #fff;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.btn-logout:hover {
+    background-color: #c0392b;
+}
+
+/* Adicione esta regra para ajustar o layout principal */
+body {
+    padding-top: 60px; /* Igual à altura do header */
+}
+
+/* Media query para responsividade */
+@media (max-width: 768px) {
+    .header {
+        left: 0;
+    }
+
+    .header h1 {
+        font-size: 1.2em;
+    }
+
+    .user-info span {
+        display: none; /* Oculta o nome do usuário em telas menores */
+    }
+}

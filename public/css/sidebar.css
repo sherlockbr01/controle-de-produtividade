@@ -1,0 +1,44 @@
+.sidebar {
+    width: 250px;
+    height: 100vh;
+    background-color: #23272a;
+    color: #ecf0f1;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    position: fixed;
+    left: 0;
+    top: 0;
+    overflow-y: auto;
+    z-index: 1000; /* Garante que o sidebar fique acima do conteúdo */
+}
+
+.sidebar a {
+    color: #ecf0f1;
+    text-decoration: none;
+    margin-bottom: 15px;
+    font-size: 1.1em;
+    transition: color 0.3s;
+}
+
+.sidebar a:hover {
+    color: #7289da;
+}
+
+/* Adicione esta regra para ajustar o layout principal */
+body {
+    padding-left: 250px; /* Igual à largura do sidebar */
+}
+
+/* Media query para responsividade */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+    }
+
+    body {
+        padding-left: 0;
+    }
+}

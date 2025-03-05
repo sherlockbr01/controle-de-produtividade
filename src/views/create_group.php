@@ -12,25 +12,17 @@ $groupController = new GroupController($pdo, $authController);
 // Obtenha todos os grupos
 $groups = $groupController->getAllGroups();
 
-
 // Processar a submissão do formulário para criar um grupo
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $name = $_POST['name'] ?? null;
-    $description = $_POST['description'] ?? null;
-
-    if ($name && $description) {
-        if ($groupController->createGroup($name, $description)) {
-            $_SESSION['success_message'] = "Grupo criado com sucesso!";
-        } else {
-            $_SESSION['error_message'] = "Erro ao criar o grupo.";
-        }
-    } else {
-        $_SESSION['error_message'] = "Por favor, preencha todos os campos.";
-    }
-
-    header('Location: /sistema_produtividade/public/create-group');
-    exit;
+    // ... (mantenha o código existente para processamento do formulário)
 }
+
+// Definir os itens de menu para esta página
+$menuItems = [
+    ['url' => '/sistema_produtividade/public/dashboard-diretor', 'icon' => 'fas fa-home', 'text' => 'Início'],
+    ['url' => '/sistema_produtividade/public/manage-groups', 'icon' => 'fas fa-users', 'text' => 'Gerenciar Grupos'],
+    ['url' => '/sistema_produtividade/public/assign-user-group', 'icon' => 'fas fa-user-plus', 'text' => 'Atribuir Usuário a Grupo'],
+];
 ?>
 
 <!DOCTYPE html>
@@ -40,25 +32,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Criar Novo Grupo</title>
     <link rel="stylesheet" href="/sistema_produtividade/public/css/create_group.css">
+    <link rel="stylesheet" href="/sistema_produtividade/public/css/sidebar.css">
+    <link rel="stylesheet" href="/sistema_produtividade/public/css/header.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-
 </head>
 <body>
 <div class="dashboard-container">
-    <div class="sidebar">
-        <a href="/sistema_produtividade/public/dashboard-servidor"><i class="fas fa-home icon"></i> Início</a>
-        <a href="/sistema_produtividade/public/manage-groups"><i class="fas fa-users icon"></i> Gerenciar Grupos</a>
-        <a href="/sistema_produtividade/public/assign-user-group"><i class="fas fa-user-plus icon"></i> Atribuir Usuário a Grupo</a>
-    </div>
+    <?php include __DIR__ . '/../compnents/sidebar.php'; ?>
+
     <div class="main-content">
-        <header class="header">
-            <h1>Criar Novo Grupo</h1>
-            <div class="user-info">
-                <span>Bem-vindo, <?= htmlspecialchars($_SESSION['user_name']) ?>!</span>
-                <a href="/sistema_produtividade/public/logout" class="btn-logout">Sair</a>
-            </div>
-        </header>
+        <?php include __DIR__ . '/../compnents/header.php'; ?>
+
         <main>
+            <h1>Criar Novo Grupo</h1>
+
             <!-- Exibir mensagens de sucesso ou erro -->
             <?php if (isset($_SESSION['success_message'])): ?>
                 <div id="success-message" class="alert alert-success">

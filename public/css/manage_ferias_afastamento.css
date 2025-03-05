@@ -1,0 +1,362 @@
+/* Reset some default styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #2c2f33;
+    color: #ffffff;
+    line-height: 1.6;
+}
+
+/* Container principal */
+.dashboard-container {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* Conteúdo principal */
+.main-content {
+    flex: 1;
+    height: 100vh;
+    padding: 20px;
+    background-color: #36393f;
+    overflow-y: auto;
+}
+
+/* Dashboard e outros elementos */
+.dashboard {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+.dashboard-summary {
+    grid-column: span 2;
+}
+
+.summary-cards {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 30px; /* Adicionado conforme solicitado */
+    margin-bottom: 20px;
+    flex-wrap: wrap; /* Permite que os cartões quebrem para a próxima linha se necessário */
+    gap: 20px; /* Espaço entre os cartões */
+}
+.card {
+    background-color: #2f3136;
+    border-radius: 8px;
+    padding: 20px;
+    flex: 1 1 calc(25% - 20px); /* Flexível, mas com um tamanho base */
+    min-width: 200px; /* Largura mínima para evitar cartões muito estreitos */
+    max-width: calc(25% - 20px); /* Largura máxima para manter 4 cartões por linha */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+.card h3 {
+    font-size: 16px;
+    margin-bottom: 10px;
+    color: #b9bbbe;
+}
+
+.card .big-number {
+    font-size: 24px;
+    font-weight: bold;
+    color: #7289da;
+}
+.card:last-child {
+    margin-right: 0; /* Remove a margem do último cartão */
+}
+/* Media query para telas menores */
+@media (max-width: 1200px) {
+    .card {
+        flex: 1 1 calc(50% - 20px); /* 2 cartões por linha em telas médias */
+        max-width: calc(50% - 20px);
+    }
+}
+
+@media (max-width: 768px) {
+    .card {
+        flex: 1 1 100%; /* 1 cartão por linha em telas pequenas */
+        max-width: 100%;
+    }
+}
+.nav-button {
+    background-color: #ff4c4c;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    margin: 10px;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 16px;
+    transition: background-color 0.3s;
+}
+
+.nav-button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+.nav-button:hover:not(:disabled) {
+    background-color: #ff1a1a;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.chart-container {
+    background-color: #2c2f33;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    height: 400px;
+}
+
+.dashboard-activities {
+    grid-column: span 2;
+    background-color: #2c2f33;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+th, td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #555;
+}
+
+th {
+    background-color: #23272a;
+    color: #ffffff;
+}
+
+.no-data {
+    text-align: center;
+    color: #999;
+    margin-top: 20px;
+}
+
+.form-section {
+    background-color: #2c2f33;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    margin-bottom: 20px;
+}
+
+.afastamento-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-control {
+    background-color: #40444b;
+    border: 1px solid #4f545c;
+    border-radius: 4px;
+    color: #ffffff;
+    padding: 8px 12px;
+    font-size: 14px;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #7289da;
+}
+
+.btn-submit {
+    background-color: #7289da;
+    color: #ffffff;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s;
+}
+
+.btn-submit:hover {
+    background-color: #5b6eae;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+}
+
+.modal-content {
+    background-color: #2f3136;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 600px;
+    border-radius: 5px;
+    position: relative;
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    position: absolute;
+    right: 10px;
+    top: 5px;
+}
+
+.close:hover,
+.close:focus {
+    color: #fff;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+#motivoCompleto {
+    color: #ffffff;
+    margin-top: 20px;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    max-width: 100%;
+    text-align: justify;
+}
+
+.btn-ver-mais {
+    background: none;
+    border: none;
+    color: #4a90e2;
+    cursor: pointer;
+    font-size: 0.9em;
+    padding: 0;
+    text-decoration: underline;
+}
+
+.btn-ver-mais:hover {
+    color: #2a6496;
+}
+
+.ferias-afastamentos-page {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.ferias-afastamentos-page .main-content {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding-right: 20px;
+}
+
+.ferias-afastamentos-page .dashboard-content {
+    padding-bottom: 40px;
+}
+
+.ferias-afastamentos-page .summary-cards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.ferias-afastamentos-page .card {
+    flex: 1 1 calc(25% - 10px);
+    min-width: 200px;
+}
+
+.ferias-afastamentos-page .current-leaves,
+.ferias-afastamentos-page .ferias-afastamento-list {
+    margin-bottom: 20px;
+}
+
+.ferias-afastamentos-page table {
+    width: 100%;
+    font-size: 14px;
+}
+
+.ferias-afastamentos-page table th,
+.ferias-afastamentos-page table td {
+    padding: 8px;
+    font-size: 14px;
+}
+.btn-icon {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2em;
+    padding: 5px;
+    margin: 0 5px;
+    transition: transform 0.2s;
+}
+
+.btn-icon:hover {
+    transform: scale(1.2);
+}
+
+.btn-aprovar {
+    color: #28a745;
+}
+
+.btn-rejeitar {
+    color: #dc3545;
+}
+
+/* Estilo para o tooltip */
+.btn-icon[title]:hover::after {
+    content: attr(title);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 0.8em;
+    white-space: nowrap;
+}
+.page-title {
+    margin: 30px 0;
+    text-align: center;
+}
+
+.page-title h2 {
+    font-size: 28px;
+    color: #ffffff;
+    padding: 15px 0;
+    border-bottom: 2px solid #7289da;
+}

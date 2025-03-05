@@ -1,0 +1,163 @@
+/* Reset e estilos gerais */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #36393f;
+    color: #ffffff;
+    min-height: 100vh;
+}
+
+/* Conteúdo principal */
+.main-content {
+    padding: 20px;
+    flex-grow: 1;
+    position: relative;
+}
+
+/* Estilos para o cartão do grupo */
+.group-card {
+    background-color: #2f3136;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.group-card h2 {
+    margin-bottom: 10px;
+    color: #ffffff;
+}
+
+.group-card p {
+    color: #ecf0f1;
+}
+
+/* Estilos para a seção de membros */
+.members-section {
+    /* Removido o background-color */
+    border-radius: 8px;
+    /* Removido o box-shadow */
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.members-title {
+    font-size: 20px;
+    color: #7289da;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.members-cards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+}
+
+.member-card {
+    background-color: #3a3b3c;
+    padding: 15px;
+    border-radius: 8px;
+    width: calc(33.33% - 20px);
+    min-width: 250px;
+    max-width: 350px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.member-name {
+    font-size: 18px;
+    color: #ffffff;
+    margin-bottom: 10px;
+}
+
+.member-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.stat-item {
+    background-color: #2f3136;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.stat-label {
+    font-size: 14px;
+    color: #ecf0f1;
+}
+
+.stat-value {
+    font-size: 20px;
+    color: #7289da;
+    font-weight: bold;
+}
+
+/* Estilos para os totais do grupo */
+.group-totals {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 20px;
+}
+
+.total-card {
+    background-color: #2f3136;
+    padding: 15px;
+    border-radius: 8px;
+    width: 45%;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.total-label {
+    font-size: 16px;
+    color: #ecf0f1;
+    margin-bottom: 5px;
+}
+
+.total-value {
+    font-size: 24px;
+    color: #7289da;
+    font-weight: bold;
+}
+
+/* Mensagem de erro */
+.error-message {
+    color: #e74c3c;
+    text-align: center;
+    margin-top: 20px;
+    font-size: 18px;
+}
+
+/* Media queries para responsividade */
+@media (max-width: 768px) {
+    .member-card {
+        width: calc(50% - 10px);
+    }
+
+    .group-totals {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .total-card {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .member-card {
+        width: 100%;
+    }
+}

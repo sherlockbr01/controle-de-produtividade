@@ -9,6 +9,7 @@ use Jti30\SistemaProdutividade\Controllers\AuthController;
 use Jti30\SistemaProdutividade\Controllers\ServidorController;
 use Jti30\SistemaProdutividade\Controllers\DiretorController;
 use Jti30\SistemaProdutividade\Controllers\GroupController;
+use Jti30\SistemaProdutividade\Controllers\FeriasAfastamentoController;
 
 // Criar conexão com o banco de dados
 $pdo = connectDatabase();
@@ -67,6 +68,12 @@ try {
         case 'dashboard-diretor':
             $authController->requireDirectorAuth();
             $data = $diretorController->getDashboardData();
+
+            // Adicione esta verificação
+            if (!isset($data['groupProductivity'])) {
+                $data['groupProductivity'] = [];
+            }
+
             require __DIR__ . '/../src/views/dashboard_diretor.php';
             break;
 
@@ -249,6 +256,102 @@ try {
                 require __DIR__ . '/../src/views/group_details.php';
             } else {
                 echo "ID do grupo não fornecido.";
+            }
+            break;
+
+        case 'gestao-ferias-afastamentos':
+            $authController->requireServerAuth(); // Apenas servidores podem acessar
+            $feriasAfastamentoController = new FeriasAfastamentoController($pdo);
+            $userData = $feriasAfastamentoController->listarFeriasAfastamentos($_SESSION['user_id']);
+            require __DIR__ . '/../src/views/gestao_ferias_afastamentos.php';
+            break;
+
+        case 'gerenciar-ferias-afastamento':
+            $authController->requireDirectorAuth();
+            $feriasAfastamentoController = new FeriasAfastamentoController($pdo);
+            $gestaoData = $feriasAfastamentoController->getGestaoFeriasAfastamentosData();
+
+            // Garantir que 'currentLeaves' existe no array, mesmo que vazio
+            if (!isset($gestaoData['currentLeaves'])) {
+                $gestaoData['currentLeaves'] = [];
+            }
+
+            // Adicionar mensagens de sucesso ou erro, se existirem
+            $gestaoData['success_message'] = $_SESSION['success_message'] ?? null;
+            $gestaoData['error_message'] = $_SESSION['error_message'] ?? null;
+
+            // Limpar as mensagens da sessão após usá-las
+            unset($_SESSION['success_message'], $_SESSION['error_message']);
+
+            require __DIR__ . '/../src/views/manage_ferias_afastamento.php';
+            break;
+
+        case 'submit-ferias-afastamento':
+            $authController->requireServerAuth();
+            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                $feriasAfastamentoController = new FeriasAfastamentoController($pdo);
+                $result = $feriasAfastamentoController->registrarFeriasAfastamento(
+                    $_SESSION['user_id'],
+                    $_POST['tipo_afastamento'],
+                    $_POST['data_inicio'],
+                    $_POST['data_termino'],
+                    $_POST['comentario']
+                );
+
+                if ($result) {
+                    $_SESSION['success_message'] = 'Solicitação de férias/afastamento registrada com sucesso.';
+                } else {
+                    $_SESSION['error_message'] = 'Erro ao registrar a solicitação de férias/afastamento.';
+                }
+
+                // Redirecionar para a página de gestão de férias e afastamentos
+                header('Location: /sistema_produtividade/public/gestao-ferias-afastamentos');
+                exit;
+            }
+            break;
+
+
+        case 'submit-ferias-afastamento':
+            $authController->requireServerAuth();
+            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                $feriasAfastamentoController = new FeriasAfastamentoController($pdo);
+                $result = $feriasAfastamentoController->registrarFeriasAfastamento(
+                    $_SESSION['user_id'],
+                    $_POST['tipo_afastamento'],
+                    $_POST['data_inicio'],
+                    $_POST['data_termino'],
+                    $_POST['comentario']
+                );
+                echo json_encode(['success' => $result]);
+            }
+            exit;
+
+        case 'processar-solicitacao-ferias-afastamento':
+            $authController->requireDirectorAuth();
+            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                $feriasAfastamentoController = new FeriasAfastamentoController($pdo);
+                $solicitacaoId = filter_input(INPUT_POST, 'solicitacao_id', FILTER_SANITIZE_NUMBER_INT);
+                $acao = filter_input(INPUT_POST, 'acao', FILTER_SANITIZE_STRING);
+
+                if ($solicitacaoId && $acao) {
+                    if ($acao === 'aprovar') {
+                        $result = $feriasAfastamentoController->aprovarSolicitacao($solicitacaoId);
+                    } elseif ($acao === 'rejeitar') {
+                        $result = $feriasAfastamentoController->rejeitarSolicitacao($solicitacaoId);
+                    }
+
+                    if ($result) {
+                        $_SESSION['success_message'] = 'Solicitação ' . ($acao === 'aprovar' ? 'aprovada' : 'rejeitada') . ' com sucesso.';
+                    } else {
+                        $_SESSION['error_message'] = 'Erro ao processar a solicitação.';
+                    }
+                } else {
+                    $_SESSION['error_message'] = 'Dados inválidos para processar a solicitação.';
+                }
+
+                // Redirecionar de volta para a página de gerenciamento
+                header('Location: /sistema_produtividade/public/gerenciar-ferias-afastamento');
+                exit;
             }
             break;
 
