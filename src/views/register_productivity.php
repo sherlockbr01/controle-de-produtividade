@@ -21,9 +21,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $pageTitle = "Registrar Produtividade";
 
 $menuItems = [
-    ['url' => '/sistema_produtividade/public/inicio', 'icon' => 'fas fa-home', 'text' => 'Início'],
+    ['url' => '/sistema_produtividade/public/dashboard-servidor', 'icon' => 'fas fa-home', 'text' => 'Início'],
+    ['url' => '/sistema_produtividade/public/registrar-produtividade', 'icon' => 'fas fa-clipboard-list', 'text' => 'Registrar Produtividade'],
     ['url' => '/sistema_produtividade/public/meu-grupo', 'icon' => 'fas fa-users', 'text' => 'Meu Grupo'],
-    ['url' => '/sistema_produtividade/public/gerenciar-ferias-afastamento', 'icon' => 'fas fa-calendar-alt', 'text' => 'Gerenciar Férias e Afastamentos']
+    ['url' => '/sistema_produtividade/public/gestao-ferias-afastamentos', 'icon' => 'fas fa-calendar-alt', 'text' => 'Férias e Afastamentos']
 ];
 ?>
 
@@ -111,17 +112,19 @@ $menuItems = [
 <!-- Modal para Tipo de Minuta -->
 <div id="minuteModal" class="modal">
     <div class="modal-content">
-        <span class="close" onclick="closeModal('minuteModal')">&times;</span>
-        <h2>Adicionar Tipo de Minuta</h2>
-        <form id="addMinuteForm">
-            <input type="text" id="new_minute_type" name="new_minute_type" placeholder="Novo Tipo de Minuta" required>
-            <button type="button" id="addMinuteButton">Adicionar</button>
+        <span class="close">&times;</span>
+        <h2>Adicionar Novo Tipo de Minuta</h2>
+        <form action="/sistema_produtividade/public/adicionar-tipo-minuta" method="POST">
+            <label for="new_minute_type">Nome do Tipo de Minuta:</label>
+            <input type="text" id="new_minute_type" name="new_minute_type" required>
+            <button type="button" onclick="addMinuteType()">Adicionar</button>
         </form>
     </div>
 </div>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Funcionalidade para mensagens de alerta
         var messages = document.querySelectorAll('.alert');
         messages.forEach(function(message) {
             setTimeout(function() {
@@ -131,7 +134,70 @@ $menuItems = [
                 }, 500);
             }, 5000);
         });
+
+        // Configurar a data atual como padrão no campo de data
+        var today = new Date().toISOString().split('T')[0];
+        document.getElementById('date').value = today;
     });
+
+    function openModal(modalId) {
+        var modal = document.getElementById(modalId);
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    function closeModal(modalId) {
+        var modal = document.getElementById(modalId);
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    function addMinuteType() {
+        var newMinuteType = document.getElementById('new_minute_type').value;
+        if (newMinuteType) {
+            fetch('/sistema_produtividade/public/add-minute-type', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'new_minute_type=' + encodeURIComponent(newMinuteType)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        updateMinuteTypesList(data.id, newMinuteType);
+                        document.getElementById('new_minute_type').value = '';
+                        closeModal('minuteModal');
+                    } else {
+                        console.error('Erro ao adicionar tipo de minuta:', data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                });
+        }
+    }
+
+    function updateMinuteTypesList(newId, newType) {
+        var select = document.getElementById('minute_type_id');
+        var option = document.createElement('option');
+        option.value = newId;
+        option.textContent = newType;
+        select.appendChild(option);
+
+        // Seleciona o novo tipo de minuta
+        select.value = newId;
+    }
+
+    // Fechar o modal se clicar fora dele
+    window.onclick = function(event) {
+        var modal = document.getElementById('minuteModal');
+        if (event.target == modal) {
+            closeModal('minuteModal');
+        }
+    }
 </script>
 </body>
 </html>

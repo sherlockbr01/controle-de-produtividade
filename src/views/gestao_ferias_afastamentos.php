@@ -21,9 +21,10 @@ $userAfastamentos = $data['afastamentos'];
 $tiposAfastamento = $data['tiposAfastamento'];
 
 $menuItems = [
-    ['url' => '/sistema_produtividade/public/inicio', 'icon' => 'fas fa-home', 'text' => 'Início'],
+    ['url' => '/sistema_produtividade/public/dashboard-servidor', 'icon' => 'fas fa-home', 'text' => 'Início'],
     ['url' => '/sistema_produtividade/public/registrar-produtividade', 'icon' => 'fas fa-clipboard-list', 'text' => 'Registrar Produtividade'],
-    ['url' => '/sistema_produtividade/public/meu-grupo', 'icon' => 'fas fa-users', 'text' => 'Meu Grupo']
+    ['url' => '/sistema_produtividade/public/meu-grupo', 'icon' => 'fas fa-users', 'text' => 'Meu Grupo'],
+    ['url' => '/sistema_produtividade/public/gestao-ferias-afastamentos', 'icon' => 'fas fa-calendar-alt', 'text' => 'Férias e Afastamentos']
 ];
 $pageTitle = "Registrar Férias ou Afastamento";
 

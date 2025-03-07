@@ -114,14 +114,12 @@ function isAfastamentoFuturo($dataInicio) {
                     <tbody>
                     <?php if (!empty($dadosPagina['currentLeaves'])): ?>
                         <?php foreach ($dadosPagina['currentLeaves'] as $leave): ?>
-                            <?php if (!isAfastamentoFuturo($leave['data_inicio'])): ?>
-                                <tr>
-                                    <td><?= htmlspecialchars($leave['name']) ?></td>
-                                    <td><?= formatarData($leave['data_inicio']) ?></td>
-                                    <td><?= formatarData($leave['data_termino']) ?></td>
-                                    <td><?= htmlspecialchars($leave['tipo_afastamento']) ?></td>
-                                </tr>
-                            <?php endif; ?>
+                            <tr>
+                                <td><?= htmlspecialchars($leave['name']) ?></td>
+                                <td><?= formatarData($leave['data_inicio']) ?></td>
+                                <td><?= formatarData($leave['data_termino']) ?></td>
+                                <td><?= htmlspecialchars($leave['tipo_afastamento']) ?></td>
+                            </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
@@ -134,30 +132,35 @@ function isAfastamentoFuturo($dataInicio) {
 
             <section class="future-leaves">
                 <h2>Servidores com Afastamento Futuro</h2>
-                <?php if (empty($dadosPagina['futureLeaves'])): ?>
-                    <p>Não há servidores com afastamento futuro.</p>
-                <?php else: ?>
-                    <table>
-                        <thead>
-                        <tr>
-                            <th>Nome</th>
-                            <th>Data de Início</th>
-                            <th>Data de Término</th>
-                            <th>Tipo de Afastamento</th>
-                        </tr>
-                        </thead>
-                        <tbody>
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Data de Início</th>
+                        <th>Data de Término</th>
+                        <th>Tipo de Afastamento</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <?php if (!empty($dadosPagina['futureLeaves'])): ?>
                         <?php foreach ($dadosPagina['futureLeaves'] as $afastamento): ?>
-                            <tr>
-                                <td><?php echo htmlspecialchars($afastamento['name']); ?></td>
-                                <td><?php echo formatarData($afastamento['data_inicio']); ?></td>
-                                <td><?php echo formatarData($afastamento['data_termino']); ?></td>
-                                <td><?php echo htmlspecialchars($afastamento['tipo_afastamento']); ?></td>
-                            </tr>
+                            <?php if ($afastamento['status'] === 'Aprovado' && isAfastamentoFuturo($afastamento['data_inicio'])): ?>
+                                <tr>
+                                    <td><?php echo htmlspecialchars($afastamento['name']); ?></td>
+                                    <td><?php echo formatarData($afastamento['data_inicio']); ?></td>
+                                    <td><?php echo formatarData($afastamento['data_termino']); ?></td>
+                                    <td><?php echo htmlspecialchars($afastamento['tipo_afastamento']); ?></td>
+                                </tr>
+                            <?php endif; ?>
                         <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                <?php endif; ?>
+                    <?php endif; ?>
+                    <?php if (empty($dadosPagina['futureLeaves']) || !array_filter($dadosPagina['futureLeaves'], function($afastamento) { return $afastamento['status'] === 'Aprovado' && isAfastamentoFuturo($afastamento['data_inicio']); })): ?>
+                        <tr>
+                            <td colspan="4">Não há servidores com afastamento futuro.</td>
+                        </tr>
+                    <?php endif; ?>
+                    </tbody>
+                </table>
             </section>
 
             <section class="ferias-afastamento-list">

@@ -7,32 +7,37 @@ $servidorController = new ServidorController($pdo, $authController);
 // Verificar se o usuário pertence a um grupo
 $userGroup = $servidorController->getAssignedGroup($_SESSION['user_id']);
 $hasGroup = !empty($userGroup);
+
+// Definir os itens de menu para esta página
+$menuItems = [
+    ['url' => '/sistema_produtividade/public/dashboard-servidor', 'icon' => 'fas fa-home', 'text' => 'Início'],
+    ['url' => '/sistema_produtividade/public/registrar-produtividade', 'icon' => 'fas fa-clipboard-list', 'text' => 'Registrar Produtividade'],
+    ['url' => '/sistema_produtividade/public/meu-grupo', 'icon' => 'fas fa-users', 'text' => 'Meu Grupo', 'data-has-group' => $hasGroup ? 'true' : 'false'],
+    ['url' => '/sistema_produtividade/public/gestao-ferias-afastamentos', 'icon' => 'fas fa-calendar-alt', 'text' => 'Férias e Afastamentos']
+];
+
+// Definir o título da página
+$pageTitle = "Dashboard do Servidor";
 ?>
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard do Servidor - Sistema de Produtividade</title>
+    <title><?php echo $pageTitle; ?> - Sistema de Produtividade</title>
     <link rel="stylesheet" href="/sistema_produtividade/public/css/dashboard.css">
+    <link rel="stylesheet" href="/sistema_produtividade/public/css/sidebar.css">
+    <link rel="stylesheet" href="/sistema_produtividade/public/css/header.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 <div class="dashboard-container">
-    <div class="sidebar">
-        <a href="/sistema_produtividade/public/registrar-produtividade"><i class="fas fa-clipboard-list"></i> Registrar Produtividade</a>
-        <a href="/sistema_produtividade/public/meu-grupo" data-has-group="<?php echo $hasGroup ? 'true' : 'false'; ?>"><i class="fas fa-users under-construction"></i> Meu Grupo</a>
-        <a href="/sistema_produtividade/public/gestao-ferias-afastamentos"><i class="fas fa-calendar-alt"></i> Férias e Afastamentos</a>
-    </div>
+    <?php include __DIR__ . '/../compnents/sidebar.php'; ?>
+
     <div class="main-content">
-        <div class="header">
-            <h1>Dashboard do Servidor</h1>
-            <div class="user-info">
-                <span>Bem-vindo, <?php echo htmlspecialchars($_SESSION['user_name']); ?>!</span>
-                <a href="/sistema_produtividade/public/logout" class="btn-logout">Sair</a>
-            </div>
-        </div>
+        <?php include __DIR__ . '/../compnents/header.php'; ?>
 
         <main class="dashboard">
             <section class="dashboard-summary">
@@ -94,53 +99,51 @@ $hasGroup = !empty($userGroup);
                     </div>
                 </div>
             </section>
-
-            <script>
-                var ctx = document.getElementById('productivityChart').getContext('2d');
-                var productivityChart = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: <?php echo json_encode(array_column($dashboardData['monthlyProductivity'], 'month')); ?>,
-                        datasets: [{
-                            label: 'Pontos de Produtividade',
-                            data: <?php echo json_encode(array_column($dashboardData['monthlyProductivity'], 'points')); ?>,
-                            borderColor: 'rgb(75, 192, 192)',
-                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                            tension: 0.1,
-                            fill: true
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                title: {
-                                    display: true,
-                                    text: 'Pontos'
-                                }
-                            },
-                            x: {
-                                title: {
-                                    display: true,
-                                    text: 'Mês'
-                                }
-                            }
-                        },
-                        plugins: {
-                            legend: {
-                                display: true
-                            }
-                        }
-                    }
-                });
-            </script>
         </main>
     </div>
 </div>
 
 <script>
+    var ctx = document.getElementById('productivityChart').getContext('2d');
+    var productivityChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: <?php echo json_encode(array_column($dashboardData['monthlyProductivity'], 'month')); ?>,
+            datasets: [{
+                label: 'Pontos de Produtividade',
+                data: <?php echo json_encode(array_column($dashboardData['monthlyProductivity'], 'points')); ?>,
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                tension: 0.1,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Pontos'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Mês'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: true
+                }
+            }
+        }
+    });
+
     document.addEventListener('DOMContentLoaded', function() {
         var meuGrupoLink = document.querySelector('a[href="/sistema_produtividade/public/meu-grupo"]');
 

@@ -74,21 +74,30 @@ class FeriasAfastamento {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function listarAfastamentosAtuais() {
-        $sql = "SELECT u.name, a.data_inicio, a.data_termino, t.descricao as tipo_afastamento
-        FROM afastamentos a
-        JOIN users u ON a.user_id = u.id
-        JOIN tipos_afastamento t ON a.tipo_afastamento_id = t.id
-        WHERE a.status = 'Aprovado'
-        AND CURDATE() BETWEEN a.data_inicio AND a.data_termino
-        ORDER BY a.data_inicio";
-
+    public function listarTodosAfastamentos() {
+        $sql = "SELECT a.*, t.descricao as tipo_afastamento, u.name as nome_usuario
+            FROM afastamentos a 
+            JOIN tipos_afastamento t ON a.tipo_afastamento_id = t.id 
+            JOIN users u ON a.user_id = u.id
+            ORDER BY a.data_inicio DESC";
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute();
-        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 
-        // Retorna um array vazio se não houver resultados
-        return $result ? $result : [];
+    public function listarAfastamentosAtuais() {
+        $dataAtual = date('Y-m-d');
+        $sql = "SELECT u.name, a.data_inicio, a.data_termino, t.descricao as tipo_afastamento
+    FROM afastamentos a
+    JOIN users u ON a.user_id = u.id
+    JOIN tipos_afastamento t ON a.tipo_afastamento_id = t.id
+    WHERE a.status = 'Aprovado'
+    AND :data_atual BETWEEN a.data_inicio AND a.data_termino
+    ORDER BY a.data_inicio";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([':data_atual' => $dataAtual]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function listarAfastamentosFuturos() {

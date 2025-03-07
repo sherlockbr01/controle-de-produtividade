@@ -189,13 +189,17 @@ class Productivity
         }
     }
 
-    public function addMinuteType($name, $description) {
-        $stmt = $this->db->prepare("INSERT INTO minute_types (name, description) VALUES (:name, :description)");
-        $stmt->execute([
-            'name' => $name,
-            'description' => $description
-        ]);
-        return $this->db->lastInsertId();
+    public function addMinuteType($name, $userId) {
+        $sql = "INSERT INTO minute_types (name, user_id) VALUES (:name, :user_id)";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':name', $name, PDO::PARAM_STR);
+        $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
+
+        if ($stmt->execute()) {
+            return $this->db->lastInsertId();
+        }
+
+        return false;
     }
     public function getMinuteTypes($userId)
     {

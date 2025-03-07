@@ -167,27 +167,28 @@ class ServidorController {
 
             if ($minuteTypeName) {
                 try {
-                    $stmt = $this->db->prepare("INSERT INTO minute_types (name, user_id) VALUES (?, ?)");
-                    $stmt->execute([$minuteTypeName, $userId]);
-                    $newId = $this->db->lastInsertId();
+                    $productivity = new Productivity($this->db);
+                    $newId = $productivity->addMinuteType($minuteTypeName, $userId);
 
-                    header('Content-Type: application/json');
-                    echo json_encode(['success' => true, 'id' => $newId]);
-                    exit;
-                } catch (PDOException $e) {
-                    header('Content-Type: application/json');
-                    echo json_encode(['success' => false, 'message' => 'Erro ao adicionar tipo de minuta: ' . $e->getMessage()]);
-                    exit;
+                    if ($newId) {
+                        $_SESSION['success_message'] = 'Tipo de minuta adicionado com sucesso.';
+                    } else {
+                        $_SESSION['error_message'] = 'Erro ao adicionar tipo de minuta.';
+                    }
+                } catch (Exception $e) {
+                    $_SESSION['error_message'] = 'Erro ao adicionar tipo de minuta: ' . $e->getMessage();
                 }
             } else {
-                header('Content-Type: application/json');
-                echo json_encode(['success' => false, 'message' => 'Nome do tipo de minuta é obrigatório.']);
-                exit;
+                $_SESSION['error_message'] = 'Nome do tipo de minuta é obrigatório.';
             }
+
+            // Redireciona de volta para a página de registro de produtividade
+            header('Location: /sistema_produtividade/public/registrar-produtividade');
+            exit;
         }
 
-        header('Content-Type: application/json');
-        echo json_encode(['success' => false, 'message' => 'Método não permitido.']);
+        // Se não for uma requisição POST, redireciona para a página de registro de produtividade
+        header('Location: /sistema_produtividade/public/registrar-produtividade');
         exit;
     }
     public function getAssignedGroup($userId) {

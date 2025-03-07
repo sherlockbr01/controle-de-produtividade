@@ -15,7 +15,7 @@ $userName = htmlspecialchars($_SESSION['user_name']);
 ?>
 
 <header class="header">
-    <h1><?php echo htmlspecialchars($pageTitle ?? 'Sistema de Produtividade'); ?></h1>
+    <h1><?php echo isset($pageTitle) ? htmlspecialchars($pageTitle) : 'Sistema de Produtividade'; ?></h1>
     <div class="user-info">
         <span class="user-name"><?php echo $userName; ?></span>
         <a href="/sistema_produtividade/public/logout" class="btn-logout">Sair</a>

@@ -39,6 +39,24 @@ class User {
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 
+    public function getTopServers($limit = 500) {
+        $query = "SELECT u.id, u.name, 
+              SUM(p.points) as total_points, 
+              COUNT(p.id) as completed_processes,
+              AVG(p.efficiency) as avg_efficiency
+              FROM users u
+              LEFT JOIN productivity p ON u.id = p.user_id
+              GROUP BY u.id
+              ORDER BY total_points DESC
+              LIMIT :limit";
+
+        $stmt = $this->pdo->prepare($query);
+        $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public function getProfileData($userId) {
         $stmt = $this->pdo->prepare("SELECT name, email FROM users WHERE id = ?");
         $stmt->execute([$userId]);

@@ -114,8 +114,15 @@ try {
             break;
 
         case 'add-minute-type':
-            $servidorController->addMinuteType();
-            break;
+            $authController->requireServerAuth();
+            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                $result = $servidorController->addMinuteType();
+                echo json_encode($result);
+            } else {
+                http_response_code(405); // Method Not Allowed
+                echo json_encode(['error' => 'Método não permitido']);
+            }
+            exit;
 
         case 'add-decision-type':
             $authController->requireServerAuth();
