@@ -19,26 +19,11 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'diretor') {
 }
 // Definir os itens de menu para esta página
 $menuItems = [
-    [
-        'url' => '/sistema_produtividade/public/dashboard-diretor',
-        'icon' => 'fas fa-tachometer-alt',
-        'text' => 'Dashboard'
-    ],
-    [
-        'url' => '/sistema_produtividade/public/manage-groups',
-        'icon' => 'fas fa-users',
-        'text' => 'Gerenciar Grupos'
-    ],
-    [
-        'url' => '/sistema_produtividade/public/generate-reports',
-        'icon' => 'fas fa-tools',
-        'text' => 'Gerar Relatórios'
-    ],
-    [
-        'url' => '/sistema_produtividade/public/gerenciar-ferias-afastamento',
-        'icon' => 'fas fa-calendar-alt',
-        'text' => 'Gerenciar Férias e Afastamentos'
-    ]
+    ['url' => '/sistema_produtividade/public/dashboard-diretor', 'icon' => 'fas fa-home', 'text' => 'Início'],
+    ['url' => '/sistema_produtividade/public/dashboard-diretor', 'icon' => 'fas fa-tachometer-alt', 'text' => 'Dashboard'],
+    ['url' => '/sistema_produtividade/public/manage-groups', 'icon' => 'fas fa-users', 'text' => 'Gerenciar Grupos'],
+    ['url' => '/sistema_produtividade/public/generate-reports', 'icon' => 'fas fa-tools', 'text' => 'Gerar Relatórios'],
+    ['url' => '/sistema_produtividade/public/gerenciar-ferias-afastamento', 'icon' => 'fas fa-calendar-alt', 'text' => 'Gerenciar Férias e Afastamentos']
 ];
 
 // Lógica para buscar os dados de produtividade

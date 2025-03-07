@@ -29,6 +29,8 @@ class FeriasAfastamentoController
         $afastamentos = $this->getUserAfastamentos($userId);
         $tiposAfastamento = $this->getTiposAfastamento();
         $gestaoData = $this->getGestaoFeriasAfastamentosData();
+        $currentLeaves = $this->model->listarAfastamentosAtuais();
+        $futureLeaves = $this->model->listarAfastamentosFuturos();
 
         return [
             'afastamentos' => $afastamentos,
@@ -39,7 +41,10 @@ class FeriasAfastamentoController
             'rejectedCount' => $gestaoData['rejectedCount'],
             'pendingLeaveRequests' => $gestaoData['pendingLeaveRequests'],
             'totalVacations' => $gestaoData['totalVacations'],
-            'totalLeaves' => $gestaoData['totalLeaves']
+            'totalLeaves' => $gestaoData['totalLeaves'],
+            'currentLeaves' => $currentLeaves,
+            'futureLeaves' => $futureLeaves,
+            'currentLeavesCount' => count($currentLeaves)
         ];
     }
 
@@ -158,6 +163,28 @@ class FeriasAfastamentoController
 
     public function registrarFeriasAfastamento($userId, $tipoAfastamentoId, $dataInicio, $dataTermino, $comentario)
     {
-        return $this->model->registrar($userId, $tipoAfastamentoId, $dataInicio, $dataTermino, $comentario);
+        // Verificar se há sobreposição de datas
+        $afastamentosExistentes = $this->model->listarAfastamentosPorUsuario($userId);
+
+        foreach ($afastamentosExistentes as $afastamento) {
+            if (
+                ($dataInicio >= $afastamento['data_inicio'] && $dataInicio <= $afastamento['data_termino']) ||
+                ($dataTermino >= $afastamento['data_inicio'] && $dataTermino <= $afastamento['data_termino']) ||
+                ($dataInicio <= $afastamento['data_inicio'] && $dataTermino >= $afastamento['data_termino'])
+            ) {
+                // Há sobreposição
+                $_SESSION['error_message'] = "Erro ao registrar a solicitação de férias/afastamento.";
+                return false;
+            }
+        }
+
+        // Se não houver sobreposição, registra o novo afastamento
+        $result = $this->model->registrar($userId, $tipoAfastamentoId, $dataInicio, $dataTermino, $comentario);
+        if ($result) {
+            $_SESSION['success_message'] = "Solicitação de férias/afastamento registrada com sucesso.";
+        } else {
+            $_SESSION['error_message'] = "Erro ao registrar a solicitação de férias/afastamento.";
+        }
+        return $result;
     }
 }

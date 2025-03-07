@@ -40,11 +40,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // Definição dos itens de menu
 $menuItems = [
     ['url' => '/sistema_produtividade/public/dashboard-diretor', 'icon' => 'fas fa-home', 'text' => 'Início'],
-    ['url' => '/sistema_produtividade/public/relatorios', 'icon' => 'fas fa-chart-bar', 'text' => 'Relatórios'],
     ['url' => '/sistema_produtividade/public/manage-groups', 'icon' => 'fas fa-users', 'text' => 'Gerenciar Grupos'],
+    ['url' => '/sistema_produtividade/public/relatorios', 'icon' => 'fas fa-chart-bar', 'text' => 'Relatórios'],
+    ['url' => '/sistema_produtividade/public/gerenciar-ferias-afastamento', 'icon' => 'fas fa-calendar-alt', 'text' => 'Férias e Afastamentos']
 ];
 // Definir o título da página
 $pageTitle = "Gestão de Férias e Afastamentos";
+
+function formatarData($data) {
+    return date('d/m/Y', strtotime($data));
+}
+
+function isAfastamentoFuturo($dataInicio) {
+    $hoje = new DateTime();
+    $inicioAfastamento = new DateTime($dataInicio);
+    return $inicioAfastamento > $hoje;
+}
 
 ?>
 
@@ -68,6 +79,7 @@ $pageTitle = "Gestão de Férias e Afastamentos";
 
         <main class="dashboard-content">
             <div class="page-title">
+                <h1><?php echo htmlspecialchars($pageTitle); ?></h1>
             </div>
             <section class="summary-cards">
                 <div class="card">
@@ -83,8 +95,8 @@ $pageTitle = "Gestão de Férias e Afastamentos";
                     <p class="big-number"><?php echo $dadosPagina['rejectedCount']; ?></p>
                 </div>
                 <div class="card">
-                    <h3>Total de Férias/Afastamentos</h3>
-                    <p class="big-number"><?php echo $dadosPagina['totalLeaves']; ?></p>
+                    <h3>Servidores Afastados</h3>
+                    <p class="big-number"><?php echo $dadosPagina['currentLeavesCount']; ?></p>
                 </div>
             </section>
 
@@ -100,14 +112,16 @@ $pageTitle = "Gestão de Férias e Afastamentos";
                     </tr>
                     </thead>
                     <tbody>
-                    <?php if (isset($dadosPagina['currentLeaves']) && is_array($dadosPagina['currentLeaves']) && !empty($dadosPagina['currentLeaves'])): ?>
+                    <?php if (!empty($dadosPagina['currentLeaves'])): ?>
                         <?php foreach ($dadosPagina['currentLeaves'] as $leave): ?>
-                            <tr>
-                                <td><?= htmlspecialchars($leave['name']) ?></td>
-                                <td><?= htmlspecialchars($leave['data_inicio']) ?></td>
-                                <td><?= htmlspecialchars($leave['data_termino']) ?></td>
-                                <td><?= htmlspecialchars($leave['tipo_afastamento']) ?></td>
-                            </tr>
+                            <?php if (!isAfastamentoFuturo($leave['data_inicio'])): ?>
+                                <tr>
+                                    <td><?= htmlspecialchars($leave['name']) ?></td>
+                                    <td><?= formatarData($leave['data_inicio']) ?></td>
+                                    <td><?= formatarData($leave['data_termino']) ?></td>
+                                    <td><?= htmlspecialchars($leave['tipo_afastamento']) ?></td>
+                                </tr>
+                            <?php endif; ?>
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
@@ -116,6 +130,34 @@ $pageTitle = "Gestão de Férias e Afastamentos";
                     <?php endif; ?>
                     </tbody>
                 </table>
+            </section>
+
+            <section class="future-leaves">
+                <h2>Servidores com Afastamento Futuro</h2>
+                <?php if (empty($dadosPagina['futureLeaves'])): ?>
+                    <p>Não há servidores com afastamento futuro.</p>
+                <?php else: ?>
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>Data de Início</th>
+                            <th>Data de Término</th>
+                            <th>Tipo de Afastamento</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <?php foreach ($dadosPagina['futureLeaves'] as $afastamento): ?>
+                            <tr>
+                                <td><?php echo htmlspecialchars($afastamento['name']); ?></td>
+                                <td><?php echo formatarData($afastamento['data_inicio']); ?></td>
+                                <td><?php echo formatarData($afastamento['data_termino']); ?></td>
+                                <td><?php echo htmlspecialchars($afastamento['tipo_afastamento']); ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                <?php endif; ?>
             </section>
 
             <section class="ferias-afastamento-list">
@@ -147,18 +189,15 @@ $pageTitle = "Gestão de Férias e Afastamentos";
                                 }
                                 ?>
                             </td>
-                            <td><?php echo htmlspecialchars($solicitacao['data_inicio'] ?? 'N/A'); ?></td>
-                            <td><?php echo htmlspecialchars($solicitacao['data_termino'] ?? 'N/A'); ?></td>
+                            <td><?php echo formatarData($solicitacao['data_inicio'] ?? 'N/A'); ?></td>
+                            <td><?php echo formatarData($solicitacao['data_termino'] ?? 'N/A'); ?></td>
                             <td>
-                                <form method="POST" action="">
-                                    <input type="hidden" name="solicitacao_id" value="<?php echo $solicitacao['id']; ?>">
-                                    <button type="submit" name="acao" value="aprovar" class="btn-icon btn-aprovar" title="Aprovar">
-                                        <i class="fas fa-check"></i>
-                                    </button>
-                                    <button type="submit" name="acao" value="rejeitar" class="btn-icon btn-rejeitar" title="Rejeitar">
-                                        <i class="fas fa-times"></i>
-                                    </button>
-                                </form>
+                                <button class="btn-icon btn-aprovar" data-action="aprovar" data-id="<?php echo $solicitacao['id']; ?>" title="Aprovar">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                                <button class="btn-icon btn-rejeitar" data-action="rejeitar" data-id="<?php echo $solicitacao['id']; ?>" title="Rejeitar">
+                                    <i class="fas fa-times"></i>
+                                </button>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -174,12 +213,22 @@ $pageTitle = "Gestão de Férias e Afastamentos";
                     <p id="motivoCompleto"></p>
                 </div>
             </div>
+
+            <!-- Modal de confirmação -->
+            <div id="confirmModal" class="modal">
+                <div class="modal-content">
+                    <h2>Confirmação</h2>
+                    <p id="confirmMessage"></p>
+                    <button id="confirmYes" class="btn btn-primary">Sim</button>
+                    <button id="confirmNo" class="btn btn-secondary">Não</button>
+                </div>
+            </div>
         </main>
     </div>
 </div>
 
 <script>
-    // JavaScript para controlar o modal
+    // JavaScript para controlar o modal do motivo
     var modal = document.getElementById("motivoModal");
     var motivoCompleto = document.getElementById("motivoCompleto");
     var buttons = document.getElementsByClassName("btn-ver-mais");
@@ -199,6 +248,69 @@ $pageTitle = "Gestão de Férias e Afastamentos";
     window.onclick = function(event) {
         if (event.target == modal) {
             modal.style.display = "none";
+        }
+    }
+
+    // JavaScript para controlar o modal de confirmação
+    var confirmModal = document.getElementById("confirmModal");
+    var confirmMessage = document.getElementById("confirmMessage");
+    var confirmYes = document.getElementById("confirmYes");
+    var confirmNo = document.getElementById("confirmNo");
+    var actionButtons = document.querySelectorAll('.btn-aprovar, .btn-rejeitar');
+
+    actionButtons.forEach(function(button) {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            var action = this.getAttribute('data-action');
+            var id = this.getAttribute('data-id');
+            var actionText = action === 'aprovar' ? 'aprovar' : 'rejeitar';
+            confirmMessage.textContent = `Tem certeza que deseja ${actionText} esta solicitação?`;
+            confirmModal.style.display = "block";
+
+            // Armazenar os dados da ação para uso posterior
+            confirmYes.setAttribute('data-action', action);
+            confirmYes.setAttribute('data-id', id);
+        });
+    });
+
+    // Ação de confirmação
+    confirmYes.onclick = function() {
+        var action = this.getAttribute('data-action');
+        var id = this.getAttribute('data-id');
+
+        // Criar e submeter o formulário
+        var form = document.createElement('form');
+        form.method = 'POST';
+        form.action = window.location.href;
+
+        var inputAction = document.createElement('input');
+        inputAction.type = 'hidden';
+        inputAction.name = 'acao';
+        inputAction.value = action;
+
+        var inputId = document.createElement('input');
+        inputId.type = 'hidden';
+        inputId.name = 'solicitacao_id';
+        inputId.value = id;
+
+        form.appendChild(inputAction);
+        form.appendChild(inputId);
+
+        document.body.appendChild(form);
+        form.submit();
+
+        confirmModal.style.display = "none";
+    }
+
+    // Ação de cancelamento
+    confirmNo.onclick = function() {
+        confirmModal.style.display = "none";
+    }
+
+    // Fechar o modal de confirmação se clicar fora dele
+    window.onclick = function(event) {
+        if (event.target == confirmModal) {
+            confirmModal.style.display = "none";
         }
     }
 </script>

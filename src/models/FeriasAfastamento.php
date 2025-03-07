@@ -91,6 +91,19 @@ class FeriasAfastamento {
         return $result ? $result : [];
     }
 
+    public function listarAfastamentosFuturos() {
+        $dataAtual = date('Y-m-d');
+        $sql = "SELECT a.*, u.name, t.descricao as tipo_afastamento 
+            FROM afastamentos a 
+            JOIN users u ON a.user_id = u.id 
+            JOIN tipos_afastamento t ON a.tipo_afastamento_id = t.id
+            WHERE a.data_inicio > :data_atual
+            ORDER BY a.data_inicio ASC";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([':data_atual' => $dataAtual]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public function listarAfastamentosPorUsuario($userId)
     {
         $sql = "SELECT a.*, t.descricao as tipo_afastamento 

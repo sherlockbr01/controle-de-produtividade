@@ -15,6 +15,8 @@ $menuItems = [
     ['url' => '/sistema_produtividade/public/create-group', 'icon' => 'fas fa-plus-circle', 'text' => 'Criar Grupo'],
     ['url' => '/sistema_produtividade/public/manage-groups', 'icon' => 'fas fa-users', 'text' => 'Gerenciar Grupos'],
     ['url' => '/sistema_produtividade/public/assign-user-group', 'icon' => 'fas fa-user-plus', 'text' => 'Atribuir Usuário a Grupo'],
+    ['url' => '/sistema_produtividade/public/relatorios', 'icon' => 'fas fa-chart-bar', 'text' => 'Relatórios'],
+    ['url' => '/sistema_produtividade/public/gerenciar-ferias-afastamento', 'icon' => 'fas fa-calendar-alt', 'text' => 'Férias e Afastamentos']
 ];
 ?>
 

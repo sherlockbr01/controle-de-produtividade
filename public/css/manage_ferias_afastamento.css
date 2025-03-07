@@ -360,3 +360,42 @@ th {
     padding: 15px 0;
     border-bottom: 2px solid #7289da;
 }
+/* Estilos para os botões do modal de confirmação */
+#confirmYes,
+#confirmNo {
+    padding: 10px 20px;
+    margin: 0 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+}
+
+#confirmYes {
+    background-color: #4CAF50; /* Verde */
+    color: white;
+}
+
+#confirmYes:hover {
+    background-color: #45a049;
+}
+
+#confirmNo {
+    background-color: #f44336; /* Vermelho */
+    color: white;
+}
+
+#confirmNo:hover {
+    background-color: #da190b;
+}
+
+/* Ajustes adicionais para o modal */
+#confirmModal .modal-content {
+    text-align: center;
+    padding: 20px;
+}
+
+#confirmMessage {
+    margin-bottom: 20px;
+}
