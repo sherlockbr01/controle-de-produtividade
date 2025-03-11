@@ -21,7 +21,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'diretor') {
 $menuItems = [
     ['url' => '/sistema_produtividade/public/dashboard-diretor', 'icon' => 'fas fa-home', 'text' => 'Início'],
     ['url' => '/sistema_produtividade/public/manage-groups', 'icon' => 'fas fa-users', 'text' => 'Gerenciar Grupos'],
-    ['url' => '/sistema_produtividade/public/generate-reports', 'icon' => 'fas fa-tools', 'text' => 'Gerar Relatórios'],
+    ['url' => '/sistema_produtividade/public/relatorio-detalhado', 'icon' => 'fas fa-chart-bar', 'text' => 'Relatórios'],
     ['url' => '/sistema_produtividade/public/gerenciar-ferias-afastamento', 'icon' => 'fas fa-calendar-alt', 'text' => 'Gerenciar Férias e Afastamentos']
 ];
 

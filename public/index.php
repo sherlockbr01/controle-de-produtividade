@@ -10,6 +10,10 @@ use Jti30\SistemaProdutividade\Controllers\ServidorController;
 use Jti30\SistemaProdutividade\Controllers\DiretorController;
 use Jti30\SistemaProdutividade\Controllers\GroupController;
 use Jti30\SistemaProdutividade\Controllers\FeriasAfastamentoController;
+use Jti30\SistemaProdutividade\Controllers\RelatorioController;
+
+
+
 
 // Criar conexão com o banco de dados
 $pdo = connectDatabase();
@@ -19,6 +23,10 @@ $authController = new AuthController($pdo);
 $servidorController = new ServidorController($pdo, $authController);
 $diretorController = new DiretorController($pdo, $authController);
 $groupController = new GroupController($pdo, $authController);
+$relatorioController = new RelatorioController($pdo, $authController);
+
+
+
 
 $request = $_SERVER['REQUEST_URI'];
 
@@ -341,16 +349,16 @@ try {
                 $acao = filter_input(INPUT_POST, 'acao', FILTER_SANITIZE_STRING);
 
                 if ($solicitacaoId && $acao) {
-                    if ($acao === 'aprovar') {
-                        $result = $feriasAfastamentoController->aprovarSolicitacao($solicitacaoId);
-                    } elseif ($acao === 'rejeitar') {
-                        $result = $feriasAfastamentoController->rejeitarSolicitacao($solicitacaoId);
-                    }
-
-                    if ($result) {
-                        $_SESSION['success_message'] = 'Solicitação ' . ($acao === 'aprovar' ? 'aprovada' : 'rejeitada') . ' com sucesso.';
-                    } else {
-                        $_SESSION['error_message'] = 'Erro ao processar a solicitação.';
+                    try {
+                        if ($acao === 'aprovar') {
+                            $feriasAfastamentoController->aprovarSolicitacao($solicitacaoId);
+                            $_SESSION['success_message'] = 'Solicitação aprovada com sucesso.';
+                        } elseif ($acao === 'rejeitar') {
+                            $feriasAfastamentoController->rejeitarSolicitacao($solicitacaoId);
+                            $_SESSION['success_message'] = 'Solicitação rejeitada com sucesso.';
+                        }
+                    } catch (Exception $e) {
+                        $_SESSION['error_message'] = 'Erro ao processar a solicitação: ' . $e->getMessage();
                     }
                 } else {
                     $_SESSION['error_message'] = 'Dados inválidos para processar a solicitação.';
@@ -361,6 +369,15 @@ try {
                 exit;
             }
             break;
+
+        case 'relatorio-detalhado':
+            $userId = $_GET['user_id'] ?? $_SESSION['user_id'] ?? null;
+            $startDate = $_GET['start_date'] ?? null;
+            $endDate = $_GET['end_date'] ?? date('Y-m-d');
+            $relatorioDetalhado = $relatorioController->gerarRelatorioByCreatedAt($userId, $startDate, $endDate);
+            require __DIR__ . '/../src/views/relatorio_detalhado.php';
+            break;
+
 
         default:
             throw new Exception('Página não encontrada', 404);
