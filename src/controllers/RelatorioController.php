@@ -21,12 +21,31 @@ class RelatorioController {
     public function getDadosPagina($startDate = null, $endDate = null, $selectedUserId = null, $reportType = 'default') {
         $users = $this->getAllUsers();
         $relatorioData = null;
+        $userName = null;
 
         if ($startDate && $endDate && $selectedUserId) {
-            if ($reportType == 'created_at') {
-                $relatorioData = $this->gerarRelatorioByCreatedAt($selectedUserId, $startDate, $endDate);
-            } else {
-                $relatorioData = $this->gerarRelatorioDetalhado($selectedUserId, $startDate, $endDate);
+            // Obter o nome do usuário selecionado
+            foreach ($users as $user) {
+                if ($user['id'] == $selectedUserId) {
+                    $userName = $user['name'];
+                    break;
+                }
+            }
+
+            switch ($reportType) {
+                case 'created_at':
+                    $relatorioData = $this->gerarRelatorioByCreatedAt($selectedUserId, $startDate, $endDate);
+                    break;
+                case 'decisions':
+                    $relatorioData = $this->gerarRelatorioTiposDecisao($selectedUserId, $startDate, $endDate);
+                    $relatorioData['userName'] = $userName;
+                    break;
+                case 'productivity':
+                    $relatorioData = $this->gerarRelatorioDetalhado($selectedUserId, $startDate, $endDate);
+                    break;
+                default:
+                    $relatorioData = $this->gerarRelatorioDetalhado($selectedUserId, $startDate, $endDate);
+                    break;
             }
         }
 
@@ -36,8 +55,16 @@ class RelatorioController {
             'startDate' => $startDate,
             'endDate' => $endDate,
             'selectedUserId' => $selectedUserId,
-            'reportType' => $reportType
+            'reportType' => $reportType,
+            'userName' => $userName
         ];
+    }
+
+    private function getUserName($userId) {
+        $stmt = $this->pdo->prepare("SELECT name FROM users WHERE id = ?");
+        $stmt->execute([$userId]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result ? $result['name'] : '';
     }
 
     public function gerarRelatorioDetalhado($userId, $startDate, $endDate) {
@@ -137,13 +164,34 @@ class RelatorioController {
     }
 
     public function gerarRelatorioGrupo($groupId = null, $startDate = null, $endDate = null) {
-        // Implementação do relatório de grupo
-        // Este é um exemplo, você precisará ajustar conforme sua lógica de negócios
         try {
             return $this->relatorioModel->getRelatorioGrupo($groupId, $startDate, $endDate);
         } catch (Exception $e) {
             return [
                 'error' => 'Erro ao gerar relatório do grupo: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    public function gerarRelatorioTiposDecisao($userId = null, $startDate = null, $endDate = null) {
+        if (!$userId) {
+            $userId = $_SESSION['user_id'] ?? null;
+        }
+        if (!$userId) {
+            return ['error' => 'Usuário não autenticado'];
+        }
+
+        try {
+            return $this->relatorioModel->getDecisionTypesReport($userId, $startDate, $endDate);
+        } catch (Exception $e) {
+            return [
+                'error' => 'Erro ao gerar relatório de tipos de decisão: ' . $e->getMessage(),
+                'decision_types' => [],
+                'overall_stats' => [
+                    'total_count' => 0,
+                    'total_points' => 0,
+                    'average_points' => 0
+                ]
             ];
         }
     }

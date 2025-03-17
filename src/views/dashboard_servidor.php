@@ -79,23 +79,11 @@ $pageTitle = "Dashboard do Servidor";
                         </tr>
                         </thead>
                         <tbody>
-                        <?php foreach ($dashboardData['recentActivities'] as $activity): ?>
-                            <tr>
-                                <td><?php echo htmlspecialchars($activity['process_number']); ?></td>
-                                <td><?php echo htmlspecialchars($activity['minute_type']); ?></td>
-                                <td><?php echo htmlspecialchars($activity['decision_type']); ?></td>
-                                <td><?php echo htmlspecialchars($activity['points']); ?></td>
-                                <td><?php echo htmlspecialchars(date('d/m/Y', strtotime($activity['created_at']))); ?></td>
-                            </tr>
-                        <?php endforeach; ?>
+                        <!-- Dados serão carregados via JavaScript -->
                         </tbody>
                     </table>
-
-                    <div class="pagination" style="text-align: center; margin-top: 20px;">
-                        <?php if ($dashboardData['currentPage'] > 1): ?>
-                            <a href="?page=<?php echo $dashboardData['currentPage'] - 1; ?>" class="nav-link" style="display: inline-block; padding: 5px 15px; margin: 5px; background-color: #007bff; color: white; text-decoration: none; border-radius: 3px; font-size: 14px;">Anterior</a>
-                        <?php endif; ?>
-                        <a href="?page=<?php echo $dashboardData['currentPage'] + 1; ?>" class="nav-link" style="display: inline-block; padding: 5px 15px; margin: 5px; background-color: #007bff; color: white; text-decoration: none; border-radius: 3px; font-size: 14px;">Próximo</a>
+                    <div id="pagination" class="pagination">
+                        <!-- Paginação será carregada via JavaScript -->
                     </div>
                 </div>
             </section>
@@ -104,55 +92,136 @@ $pageTitle = "Dashboard do Servidor";
 </div>
 
 <script>
-    var ctx = document.getElementById('productivityChart').getContext('2d');
-    var productivityChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: <?php echo json_encode(array_column($dashboardData['monthlyProductivity'], 'month')); ?>,
-            datasets: [{
-                label: 'Pontos de Produtividade',
-                data: <?php echo json_encode(array_column($dashboardData['monthlyProductivity'], 'points')); ?>,
-                borderColor: 'rgb(75, 192, 192)',
-                backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                tension: 0.1,
-                fill: true
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    title: {
-                        display: true,
-                        text: 'Pontos'
-                    }
-                },
-                x: {
-                    title: {
-                        display: true,
-                        text: 'Mês'
-                    }
-                }
-            },
-            plugins: {
-                legend: {
-                    display: true
-                }
+    // Função para carregar os dados da página
+    function loadPage(page) {
+        fetch(`/sistema_produtividade/public/get-activities?page=${page}`)
+            .then(response => response.json())
+            .then(data => {
+                updateActivitiesTable(data.activities);
+                updatePagination(data.currentPage, data.totalPages);
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    // Função para atualizar a tabela de atividades
+    function updateActivitiesTable(activities) {
+        const tbody = document.querySelector('#activitiesTable tbody');
+        tbody.innerHTML = '';
+        activities.forEach(activity => {
+            const row = `
+                <tr>
+                    <td>${activity.process_number}</td>
+                    <td>${activity.minute_type}</td>
+                    <td>${activity.decision_type}</td>
+                    <td>${activity.points}</td>
+                    <td>${new Date(activity.created_at).toLocaleDateString('pt-BR')}</td>
+                </tr>
+            `;
+            tbody.innerHTML += row;
+        });
+    }
+
+    // Função para atualizar a paginação
+    function updatePagination(currentPage, totalPages) {
+        const pagination = document.getElementById('pagination');
+        pagination.innerHTML = '';
+
+        const range = 2;
+        let start = Math.max(1, currentPage - range);
+        let end = Math.min(totalPages, currentPage + range);
+
+        if (currentPage > 1) {
+            pagination.innerHTML += `<a href="#" onclick="loadPage(${currentPage - 1}); return false;" class="pagination-link">Anterior</a>`;
+        }
+
+        if (start > 1) {
+            pagination.innerHTML += `<a href="#" onclick="loadPage(1); return false;" class="pagination-link">1</a>`;
+            if (start > 2) {
+                pagination.innerHTML += '<span class="pagination-ellipsis">...</span>';
             }
         }
-    });
 
-    document.addEventListener('DOMContentLoaded', function() {
-        var meuGrupoLink = document.querySelector('a[href="/sistema_produtividade/public/meu-grupo"]');
+        for (let i = start; i <= end; i++) {
+            if (i === currentPage) {
+                pagination.innerHTML += `<span class="pagination-link active">${i}</span>`;
+            } else {
+                pagination.innerHTML += `<a href="#" onclick="loadPage(${i}); return false;" class="pagination-link">${i}</a>`;
+            }
+        }
 
-        meuGrupoLink.addEventListener('click', function(e) {
-            if (this.getAttribute('data-has-group') === 'false') {
-                e.preventDefault();
-                alert('Você não está em nenhum grupo. Entre em contato com o coordenador do sistema.');
+        if (end < totalPages) {
+            if (end < totalPages - 1) {
+                pagination.innerHTML += '<span class="pagination-ellipsis">...</span>';
+            }
+            pagination.innerHTML += `<a href="#" onclick="loadPage(${totalPages}); return false;" class="pagination-link">${totalPages}</a>`;
+        }
+
+        if (currentPage < totalPages) {
+            pagination.innerHTML += `<a href="#" onclick="loadPage(${currentPage + 1}); return false;" class="pagination-link">Próximo</a>`;
+        }
+    }
+
+    // Função para inicializar o gráfico de produtividade
+    function initProductivityChart(monthlyProductivity) {
+        var ctx = document.getElementById('productivityChart').getContext('2d');
+        var productivityChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: monthlyProductivity.map(item => item.month),
+                datasets: [{
+                    label: 'Pontos de Produtividade',
+                    data: monthlyProductivity.map(item => item.points),
+                    borderColor: 'rgb(75, 192, 192)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    tension: 0.1,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Pontos'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Mês'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: true
+                    }
+                }
             }
         });
+    }
+
+    // Função para configurar o link "Meu Grupo"
+    function setupMeuGrupoLink() {
+        var meuGrupoLink = document.querySelector('a[href="/sistema_produtividade/public/meu-grupo"]');
+        if (meuGrupoLink) {
+            meuGrupoLink.addEventListener('click', function(e) {
+                if (this.getAttribute('data-has-group') === 'false') {
+                    e.preventDefault();
+                    alert('Você não está em nenhum grupo. Entre em contato com o coordenador do sistema.');
+                }
+            });
+        }
+    }
+
+    // Carregar a primeira página e inicializar componentes ao carregar a página
+    document.addEventListener('DOMContentLoaded', function() {
+        loadPage(1);
+        initProductivityChart(<?php echo json_encode($dashboardData['monthlyProductivity'] ?? []); ?>);
+        setupMeuGrupoLink();
     });
 </script>
 

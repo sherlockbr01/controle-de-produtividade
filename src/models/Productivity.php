@@ -146,7 +146,7 @@ class Productivity
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function registerActivity($userId, $processNumber, $minuteTypeId, $decisionTypeId, $date)
+    public function registerActivity($userId, $processNumber, $minuteTypeId, $decisionTypeId)
     {
         try {
             $this->db->beginTransaction();
@@ -163,8 +163,8 @@ class Productivity
             $points = $result['points'];
 
             // Inserir a atividade com os pontos extraídos
-            $sql = "INSERT INTO productivity (user_id, process_number, minute_type_id, decision_type_id, points, date) 
-                VALUES (:user_id, :process_number, :minute_type_id, :decision_type_id, :points, :date)";
+            $sql = "INSERT INTO productivity (user_id, process_number, minute_type_id, decision_type_id, points) 
+            VALUES (:user_id, :process_number, :minute_type_id, :decision_type_id, :points)";
 
             $stmt = $this->db->prepare($sql);
             $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
@@ -172,7 +172,6 @@ class Productivity
             $stmt->bindParam(':minute_type_id', $minuteTypeId, PDO::PARAM_INT);
             $stmt->bindParam(':decision_type_id', $decisionTypeId, PDO::PARAM_INT);
             $stmt->bindParam(':points', $points, PDO::PARAM_INT);
-            $stmt->bindParam(':date', $date, PDO::PARAM_STR);
 
             $result = $stmt->execute();
 
@@ -188,6 +187,23 @@ class Productivity
             return false;
         }
     }
+
+    public function getTotalActivities($userId = null)
+    {
+        $sql = "SELECT COUNT(*) as total FROM productivity";
+        $params = [];
+
+        if ($userId !== null) {
+            $sql .= " WHERE user_id = :user_id";
+            $params[':user_id'] = $userId;
+        }
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result['total'] ?? 0;
+    }
+
 
     public function addMinuteType($name, $userId) {
         $sql = "INSERT INTO minute_types (name, user_id) VALUES (:name, :user_id)";

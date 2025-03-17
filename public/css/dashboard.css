@@ -132,3 +132,34 @@ th {
     color: #999;
     margin-top: 20px;
 }
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 20px;
+}
+
+.pagination-link {
+    color: #ffffff;
+    background-color: #4a4d52;
+    border: 1px solid #6c757d;
+    padding: 5px 10px;
+    margin: 0 5px;
+    text-decoration: none;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+.pagination-link:hover {
+    background-color: #6c757d;
+}
+
+.pagination-link.active {
+    background-color: #7289da;
+    border-color: #7289da;
+}
+
+.pagination-ellipsis {
+    color: #ffffff;
+    margin: 0 5px;
+}

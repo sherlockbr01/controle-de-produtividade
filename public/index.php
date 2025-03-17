@@ -124,6 +124,7 @@ try {
         case 'add-minute-type':
             $authController->requireServerAuth();
             if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                header('Content-Type: application/json');
                 $result = $servidorController->addMinuteType();
                 echo json_encode($result);
             } else {
@@ -371,11 +372,31 @@ try {
             break;
 
         case 'relatorio-detalhado':
+            $authController->requireAuth();
             $userId = $_GET['user_id'] ?? $_SESSION['user_id'] ?? null;
             $startDate = $_GET['start_date'] ?? null;
             $endDate = $_GET['end_date'] ?? date('Y-m-d');
-            $relatorioDetalhado = $relatorioController->gerarRelatorioByCreatedAt($userId, $startDate, $endDate);
-            require __DIR__ . '/../src/views/relatorio_detalhado.php';
+            $reportType = $_GET['report_type'] ?? 'default';
+
+            $dadosRelatorio = $relatorioController->getDadosPagina($startDate, $endDate, $userId, $reportType);
+
+            switch ($reportType) {
+                case 'created_at':
+                    require __DIR__ . '/../src/views/relatorio_created_at.php';
+                    break;
+                case 'tipos_decisoes':
+                    require __DIR__ . '/../src/views/relatorio_tipos_decisoes.php';
+                    break;
+                default:
+                    require __DIR__ . '/../src/views/relatorio_detalhado.php';
+                    break;
+            }
+            break;
+
+        case 'get-activities':
+            $authController->requireServerAuth();
+            $servidorController = new ServidorController($pdo, $authController);
+            $servidorController->getActivities();
             break;
 
 

@@ -1,11 +1,16 @@
 <?php
 use Jti30\SistemaProdutividade\Controllers\ServidorController;
+use Jti30\SistemaProdutividade\Controllers\AuthController;
+
+// Incluir o arquivo de configuração do banco de dados
+require_once __DIR__ . '/../config/database.php';
 
 if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'servidor') {
     header('Location: /sistema_produtividade/public/login');
     exit;
 }
 
+$authController = new AuthController($pdo);
 $servidorController = new ServidorController($pdo, $authController);
 $productivityData = $servidorController->registerProductivity();
 
@@ -82,11 +87,6 @@ $menuItems = [
                     </select>
                 </div>
 
-                <div class="form-group">
-                    <label for="date">Data:</label>
-                    <input type="date" id="date" name="date" required>
-                </div>
-
                 <button type="submit" class="btn-register">Registrar Produtividade</button>
 
                 <div class="alert-container">
@@ -112,7 +112,7 @@ $menuItems = [
 <!-- Modal para Tipo de Minuta -->
 <div id="minuteModal" class="modal">
     <div class="modal-content">
-        <span class="close">&times;</span>
+        <span class="close" onclick="closeModal('minuteModal')">&times;</span>
         <h2>Adicionar Novo Tipo de Minuta</h2>
         <form action="/sistema_produtividade/public/adicionar-tipo-minuta" method="POST">
             <label for="new_minute_type">Nome do Tipo de Minuta:</label>
@@ -135,9 +135,15 @@ $menuItems = [
             }, 5000);
         });
 
-        // Configurar a data atual como padrão no campo de data
-        var today = new Date().toISOString().split('T')[0];
-        document.getElementById('date').value = today;
+
+
+        // Configurar o evento de fechar para o botão X do modal
+        var closeButtons = document.getElementsByClassName('close');
+        for (var i = 0; i < closeButtons.length; i++) {
+            closeButtons[i].onclick = function() {
+                closeModal('minuteModal');
+            };
+        }
     });
 
     function openModal(modalId) {
@@ -161,6 +167,7 @@ $menuItems = [
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest'
                 },
                 body: 'new_minute_type=' + encodeURIComponent(newMinuteType)
             })
@@ -171,11 +178,12 @@ $menuItems = [
                         document.getElementById('new_minute_type').value = '';
                         closeModal('minuteModal');
                     } else {
-                        console.error('Erro ao adicionar tipo de minuta:', data.error);
+                        alert('Erro ao adicionar tipo de minuta: ' + data.error);
                     }
                 })
                 .catch(error => {
                     console.error('Erro:', error);
+                    alert('Erro ao adicionar tipo de minuta. Por favor, tente novamente.');
                 });
         }
     }
@@ -199,5 +207,3 @@ $menuItems = [
         }
     }
 </script>
-</body>
-</html>

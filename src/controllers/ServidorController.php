@@ -50,7 +50,6 @@ class ServidorController {
                 $processNumber = $_POST['process_number'] ?? '';
                 $minuteTypeId = $_POST['minute_type_id'] ?? '';
                 $decisionTypeId = $_POST['decision_type_id'] ?? '';
-                $date = $_POST['date'] ?? date('Y-m-d');
 
                 $productivity = new Productivity($this->db);
 
@@ -73,7 +72,7 @@ class ServidorController {
 
                 $points = $result['points'];
 
-                if ($productivity->registerActivity($userId, $processNumber, $minuteTypeId, $decisionTypeId, $points, $date)) {
+                if ($productivity->registerActivity($userId, $processNumber, $minuteTypeId, $decisionTypeId, $points)) {
                     $_SESSION['success_message'] = 'Produtividade registrada com sucesso.';
                     header('Location: /sistema_produtividade/public/registrar-produtividade');
                     exit;
@@ -109,10 +108,13 @@ class ServidorController {
             $productivityData = $productivity->getProductivityByUserId($userId);
             $recentActivities = $productivity->getRecentActivities($userId, $limit, $offset);
             $monthlyProductivity = $productivity->getMonthlyProductivity($userId);
+            $totalActivities = $productivity->getTotalActivities($userId);
 
             $efficiency = isset($productivityData['averagePoints']) && $productivityData['averagePoints'] > 0
                 ? ($productivityData['totalPoints'] / ($productivityData['completedProcesses'] * $productivityData['averagePoints'])) * 100
                 : 0;
+
+            $totalPages = ceil($totalActivities / $limit);
 
             return [
                 'totalPoints' => $productivityData['totalPoints'] ?? 0,
@@ -120,7 +122,9 @@ class ServidorController {
                 'efficiency' => $efficiency,
                 'recentActivities' => $recentActivities,
                 'monthlyProductivity' => $monthlyProductivity,
-                'currentPage' => $currentPage
+                'currentPage' => $currentPage,
+                'totalPages' => $totalPages,
+                'totalActivities' => $totalActivities
             ];
         } catch (Exception $e) {
             return [
@@ -129,6 +133,9 @@ class ServidorController {
                 'efficiency' => 0,
                 'recentActivities' => [],
                 'monthlyProductivity' => [],
+                'currentPage' => 1,
+                'totalPages' => 1,
+                'totalActivities' => 0,
                 'error' => 'Erro ao obter dados do dashboard: ' . $e->getMessage()
             ];
         }
@@ -171,25 +178,35 @@ class ServidorController {
                     $newId = $productivity->addMinuteType($minuteTypeName, $userId);
 
                     if ($newId) {
-                        $_SESSION['success_message'] = 'Tipo de minuta adicionado com sucesso.';
+                        return [
+                            'success' => true,
+                            'id' => $newId,
+                            'name' => $minuteTypeName
+                        ];
                     } else {
-                        $_SESSION['error_message'] = 'Erro ao adicionar tipo de minuta.';
+                        return [
+                            'success' => false,
+                            'error' => 'Erro ao adicionar tipo de minuta.'
+                        ];
                     }
                 } catch (Exception $e) {
-                    $_SESSION['error_message'] = 'Erro ao adicionar tipo de minuta: ' . $e->getMessage();
+                    return [
+                        'success' => false,
+                        'error' => 'Erro ao adicionar tipo de minuta: ' . $e->getMessage()
+                    ];
                 }
             } else {
-                $_SESSION['error_message'] = 'Nome do tipo de minuta é obrigatório.';
+                return [
+                    'success' => false,
+                    'error' => 'Nome do tipo de minuta é obrigatório.'
+                ];
             }
-
-            // Redireciona de volta para a página de registro de produtividade
-            header('Location: /sistema_produtividade/public/registrar-produtividade');
-            exit;
         }
 
-        // Se não for uma requisição POST, redireciona para a página de registro de produtividade
-        header('Location: /sistema_produtividade/public/registrar-produtividade');
-        exit;
+        return [
+            'success' => false,
+            'error' => 'Método não permitido.'
+        ];
     }
     public function getAssignedGroup($userId) {
         try {
@@ -241,6 +258,31 @@ class ServidorController {
             return ['error' => 'Erro ao buscar dados do grupo: ' . $e->getMessage()];
         }
     }
+
+    public function getActivities() {
+        $userId = $_SESSION['user_id'];
+        $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+        $limit = 5; // Número de atividades por página
+        $offset = ($page - 1) * $limit;
+
+        $activities = $this->getRecentActivities($userId, $limit, $offset);
+        $totalActivities = $this->getTotalActivities($userId);
+        $totalPages = ceil($totalActivities / $limit);
+
+        header('Content-Type: application/json');
+        echo json_encode([
+            'activities' => $activities,
+            'currentPage' => $page,
+            'totalPages' => $totalPages
+        ]);
+    }
+
+    private function getTotalActivities($userId) {
+        $stmt = $this->db->prepare("SELECT COUNT(*) FROM productivity WHERE user_id = ?");
+        $stmt->execute([$userId]);
+        return $stmt->fetchColumn();
+    }
+
 
     public function addDecisionType() {
         $this->authController->requireServerAuth();
