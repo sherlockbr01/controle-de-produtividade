@@ -1,9 +1,35 @@
 <?php
 use Jti30\SistemaProdutividade\Controllers\GroupController;
 
+// Verifica se a constante BASE_URL está definida
+if (!defined('BASE_URL')) {
+    // Função para obter a URL base do projeto
+    function getBaseUrl() {
+        $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://';
+        $host = $_SERVER['HTTP_HOST'];
+        $scriptName = $_SERVER['SCRIPT_NAME'];
+        $dirName = dirname($scriptName);
+
+        // Se estiver na raiz do domínio, retorna apenas o protocolo e host
+        if ($dirName == '/' || $dirName == '\\') {
+            return $protocol . $host;
+        }
+
+        // Remove o segmento '/public' do caminho se estiver presente
+        $basePath = $protocol . $host . $dirName;
+        if (strpos($basePath, '/public') !== false) {
+            $basePath = substr($basePath, 0, strpos($basePath, '/public'));
+        }
+
+        return $basePath;
+    }
+
+    define('BASE_URL', getBaseUrl());
+}
+
 // Verifique se o usuário está autenticado
 if (!isset($_SESSION['user_id'])) {
-    header('Location: /sistema_produtividade/public/login');
+    header('Location: ' . BASE_URL . '/login');
     exit;
 }
 
@@ -19,9 +45,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Definir os itens de menu para esta página
 $menuItems = [
-    ['url' => '/sistema_produtividade/public/dashboard-diretor', 'icon' => 'fas fa-home', 'text' => 'Início'],
-    ['url' => '/sistema_produtividade/public/manage-groups', 'icon' => 'fas fa-users', 'text' => 'Gerenciar Grupos'],
-    ['url' => '/sistema_produtividade/public/assign-user-group', 'icon' => 'fas fa-user-plus', 'text' => 'Atribuir Usuário a Grupo'],
+    ['url' => 'dashboard-diretor', 'icon' => 'fas fa-home', 'text' => 'Início'],
+    ['url' => 'manage-groups', 'icon' => 'fas fa-users', 'text' => 'Gerenciar Grupos'],
+    ['url' => 'assign-user-group', 'icon' => 'fas fa-user-plus', 'text' => 'Atribuir Usuário a Grupo'],
 ];
 ?>
 
@@ -31,17 +57,17 @@ $menuItems = [
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Criar Novo Grupo</title>
-    <link rel="stylesheet" href="/sistema_produtividade/public/css/create_group.css">
-    <link rel="stylesheet" href="/sistema_produtividade/public/css/sidebar.css">
-    <link rel="stylesheet" href="/sistema_produtividade/public/css/header.css">
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>/css/create_group.css">
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>/css/sidebar.css">
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>/css/header.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
 </head>
 <body>
 <div class="dashboard-container">
-    <?php include __DIR__ . '/../compnents/sidebar.php'; ?>
+    <?php include __DIR__ . '/../components/sidebar.php'; ?>
 
     <div class="main-content">
-        <?php include __DIR__ . '/../compnents/header.php'; ?>
+        <?php include __DIR__ . '/../components/header.php'; ?>
 
         <main>
             <h1>Criar Novo Grupo</h1>
@@ -61,7 +87,7 @@ $menuItems = [
                 <?php unset($_SESSION['error_message']); ?>
             <?php endif; ?>
 
-            <form action="/sistema_produtividade/public/create-group" method="post">
+            <form action="<?php echo BASE_URL; ?>/create-group" method="post">
                 <div class="form-group">
                     <label for="name">Nome do Grupo:</label>
                     <input type="text" id="name" name="name" required>

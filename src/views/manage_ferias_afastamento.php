@@ -3,8 +3,34 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+// Verifica se a constante BASE_URL está definida
+if (!defined('BASE_URL')) {
+    // Função para obter a URL base do projeto
+    function getBaseUrl() {
+        $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://';
+        $host = $_SERVER['HTTP_HOST'];
+        $scriptName = $_SERVER['SCRIPT_NAME'];
+        $dirName = dirname($scriptName);
+
+        // Se estiver na raiz do domínio, retorna apenas o protocolo e host
+        if ($dirName == '/' || $dirName == '\\') {
+            return $protocol . $host;
+        }
+
+        // Remove o segmento '/public' do caminho se estiver presente
+        $basePath = $protocol . $host . $dirName;
+        if (strpos($basePath, '/public') !== false) {
+            $basePath = substr($basePath, 0, strpos($basePath, '/public') + 7);
+        }
+
+        return $basePath;
+    }
+
+    define('BASE_URL', getBaseUrl());
+}
+
 if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'diretor') {
-    header('Location: /sistema_produtividade/public/');
+    header('Location: ' . BASE_URL . '/');
     exit;
 }
 
@@ -39,10 +65,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Definição dos itens de menu
 $menuItems = [
-    ['url' => '/sistema_produtividade/public/dashboard-diretor', 'icon' => 'fas fa-home', 'text' => 'Início'],
-    ['url' => '/sistema_produtividade/public/manage-groups', 'icon' => 'fas fa-users', 'text' => 'Gerenciar Grupos'],
-    ['url' => '/sistema_produtividade/public/relatorios', 'icon' => 'fas fa-chart-bar', 'text' => 'Relatórios'],
-    ['url' => '/sistema_produtividade/public/gerenciar-ferias-afastamento', 'icon' => 'fas fa-calendar-alt', 'text' => 'Férias e Afastamentos']
+    ['url' => 'dashboard-diretor', 'icon' => 'fas fa-home', 'text' => 'Início'],
+    ['url' => 'manage-groups', 'icon' => 'fas fa-users', 'text' => 'Gerenciar Grupos'],
+    ['url' => 'relatorio-detalhado', 'icon' => 'fas fa-chart-bar', 'text' => 'Relatórios'],
+    ['url' => 'gerenciar-ferias-afastamento', 'icon' => 'fas fa-calendar-alt', 'text' => 'Férias e Afastamentos']
 ];
 // Definir o título da página
 $pageTitle = "Gestão de Férias e Afastamentos";
@@ -66,16 +92,16 @@ function isAfastamentoFuturo($dataInicio) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo htmlspecialchars($pageTitle); ?></title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <link rel="stylesheet" href="/sistema_produtividade/public/css/manage_ferias_afastamento.css">
-    <link rel="stylesheet" href="/sistema_produtividade/public/css/sidebar.css">
-    <link rel="stylesheet" href="/sistema_produtividade/public/css/header.css">
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>/css/manage_ferias_afastamento.css">
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>/css/sidebar.css">
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>/css/header.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="ferias-afastamentos-page">
 <div class="dashboard-container">
-    <?php include __DIR__ . '/../compnents/sidebar.php'; ?>
+    <?php include __DIR__ . '/../components/sidebar.php'; ?>
     <div class="main-content">
-        <?php include __DIR__ . '/../compnents/header.php'; ?>
+        <?php include __DIR__ . '/../components/header.php'; ?>
 
         <main class="dashboard-content">
             <div class="page-title">

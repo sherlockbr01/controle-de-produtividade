@@ -11,11 +11,42 @@ class RelatorioController {
     private PDO $pdo;
     private $authController;
     private Relatorio $relatorioModel;
+    private $baseUrl;
 
     public function __construct(PDO $pdo, $authController) {
         $this->pdo = $pdo;
         $this->authController = $authController;
         $this->relatorioModel = new Relatorio($pdo);
+        $this->baseUrl = $this->getBaseUrl();
+    }
+
+    /**
+     * Obtém a URL base do sistema
+     * @return string
+     */
+    private function getBaseUrl() {
+        if (method_exists($this->authController, 'getBaseUrlForViews')) {
+            return $this->authController->getBaseUrlForViews();
+        }
+
+        // Fallback caso o authController não tenha o método necessário
+        $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://';
+        $host = $_SERVER['HTTP_HOST'];
+        $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
+        $dirName = dirname($scriptName);
+
+        // Se estiver na raiz do domínio, retorna apenas o protocolo e host
+        if ($dirName == '/' || $dirName == '\\') {
+            return $protocol . $host;
+        }
+
+        // Remove o segmento '/public' do caminho se estiver presente
+        $basePath = $protocol . $host . $dirName;
+        if (strpos($basePath, '/public') !== false) {
+            $basePath = substr($basePath, 0, strpos($basePath, '/public') + 7);
+        }
+
+        return $basePath;
     }
 
     public function getDadosPagina($startDate = null, $endDate = null, $selectedUserId = null, $reportType = 'default') {
@@ -56,7 +87,8 @@ class RelatorioController {
             'endDate' => $endDate,
             'selectedUserId' => $selectedUserId,
             'reportType' => $reportType,
-            'userName' => $userName
+            'userName' => $userName,
+            'baseUrl' => $this->baseUrl
         ];
     }
 
@@ -131,7 +163,8 @@ class RelatorioController {
                     'processos' => $processos
                 ],
                 'startDate' => $startDate,
-                'endDate' => $endDate
+                'endDate' => $endDate,
+                'baseUrl' => $this->baseUrl
             ];
         } catch (Exception $e) {
             return [
@@ -155,7 +188,9 @@ class RelatorioController {
         }
 
         try {
-            return $this->relatorioModel->getRelatorioUsuario($userId, $startDate, $endDate);
+            $relatorio = $this->relatorioModel->getRelatorioUsuario($userId, $startDate, $endDate);
+            $relatorio['baseUrl'] = $this->baseUrl;
+            return $relatorio;
         } catch (Exception $e) {
             return [
                 'error' => 'Erro ao gerar relatório do usuário: ' . $e->getMessage()
@@ -165,7 +200,9 @@ class RelatorioController {
 
     public function gerarRelatorioGrupo($groupId = null, $startDate = null, $endDate = null) {
         try {
-            return $this->relatorioModel->getRelatorioGrupo($groupId, $startDate, $endDate);
+            $relatorio = $this->relatorioModel->getRelatorioGrupo($groupId, $startDate, $endDate);
+            $relatorio['baseUrl'] = $this->baseUrl;
+            return $relatorio;
         } catch (Exception $e) {
             return [
                 'error' => 'Erro ao gerar relatório do grupo: ' . $e->getMessage()
@@ -182,7 +219,9 @@ class RelatorioController {
         }
 
         try {
-            return $this->relatorioModel->getDecisionTypesReport($userId, $startDate, $endDate);
+            $relatorio = $this->relatorioModel->getDecisionTypesReport($userId, $startDate, $endDate);
+            $relatorio['baseUrl'] = $this->baseUrl;
+            return $relatorio;
         } catch (Exception $e) {
             return [
                 'error' => 'Erro ao gerar relatório de tipos de decisão: ' . $e->getMessage(),

@@ -3,12 +3,38 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+// Verifica se a constante BASE_URL está definida
+if (!defined('BASE_URL')) {
+    // Função para obter a URL base do projeto
+    function getBaseUrl() {
+        $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://';
+        $host = $_SERVER['HTTP_HOST'];
+        $scriptName = $_SERVER['SCRIPT_NAME'];
+        $dirName = dirname($scriptName);
+
+        // Se estiver na raiz do domínio, retorna apenas o protocolo e host
+        if ($dirName == '/' || $dirName == '\\') {
+            return $protocol . $host;
+        }
+
+        // Remove o segmento '/public' do caminho se estiver presente
+        $basePath = $protocol . $host . $dirName;
+        if (strpos($basePath, '/public') !== false) {
+            $basePath = substr($basePath, 0, strpos($basePath, '/public') + 7);
+        }
+
+        return $basePath;
+    }
+
+    define('BASE_URL', getBaseUrl());
+}
+
 if (isset($_SESSION['user_id'])) {
     // Redirecionar para o dashboard apropriado se o usuário já estiver logado
     if ($_SESSION['user_type'] === 'servidor') {
-        header('Location: /sistema_produtividade/public/dashboard-servidor');
+        header('Location: ' . BASE_URL . '/dashboard-servidor');
     } elseif ($_SESSION['user_type'] === 'diretor') {
-        header('Location: /sistema_produtividade/public/dashboard-diretor');
+        header('Location: ' . BASE_URL . '/dashboard-diretor');
     }
     exit;
 }
@@ -19,7 +45,7 @@ if (isset($_SESSION['user_id'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registro - Sistema de Produtividade</title>
-    <link rel="stylesheet" href="/sistema_produtividade/public/css/auth.css">
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>/css/auth.css">
 </head>
 <body>
 <div class="auth-container">
@@ -33,7 +59,7 @@ if (isset($_SESSION['user_id'])) {
         <?php unset($_SESSION['register_success']); ?>
     <?php endif; ?>
     <div class="form-container">
-        <form action="/sistema_produtividade/public/register" method="post" class="form-auth">
+        <form action="<?php echo BASE_URL; ?>/register" method="post" class="form-auth">
             <div class="form-group">
                 <label for="name">Nome:</label>
                 <input type="text" id="name" name="name" placeholder="Nome" required>
@@ -56,7 +82,7 @@ if (isset($_SESSION['user_id'])) {
             <button type="submit" class="btn">Registrar</button>
         </form>
     </div>
-    <p class="auth-link">Já tem uma conta? <a href="/sistema_produtividade/public/login">Faça login</a></p>
+    <p class="auth-link">Já tem uma conta? <a href="<?php echo BASE_URL; ?>/login">Faça login</a></p>
 </div>
 </body>
 </html>

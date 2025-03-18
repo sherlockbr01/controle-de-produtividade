@@ -12,9 +12,40 @@ use Jti30\SistemaProdutividade\Controllers\GroupController;
 use Jti30\SistemaProdutividade\Controllers\FeriasAfastamentoController;
 use Jti30\SistemaProdutividade\Controllers\RelatorioController;
 
+// Definir a URL base do projeto
+function getBaseUrl() {
+    $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://';
+    $host = $_SERVER['HTTP_HOST'];
+
+    // Detectar se estamos em um ambiente de hospedagem comum
+    $isSharedHosting = !in_array($host, ['localhost', '127.0.0.1']) &&
+        !preg_match('/^localhost:[0-9]+$/', $host);
+
+    if ($isSharedHosting) {
+        // Em hospedagem compartilhada, geralmente queremos a raiz do domínio
+        return $protocol . $host;
+    } else {
+        // Em ambiente local
+        $scriptName = $_SERVER['SCRIPT_NAME'];
+        $dirName = dirname($scriptName);
+
+        // Se estiver na raiz do domínio
+        if ($dirName == '/' || $dirName == '\\') {
+            return $protocol . $host;
+        }
+
+        // Caso contrário, retorna o caminho completo
+        return $protocol . $host . $dirName;
+    }
+}
 
 
+// Verificar se a constante BASE_URL já está definida
+if (!defined('BASE_URL')) {
+    // Definir a constante BASE_URL usando a função getBaseUrl()
+    define('BASE_URL', getBaseUrl());
 
+}
 // Criar conexão com o banco de dados
 $pdo = connectDatabase();
 
@@ -24,22 +55,32 @@ $servidorController = new ServidorController($pdo, $authController);
 $diretorController = new DiretorController($pdo, $authController);
 $groupController = new GroupController($pdo, $authController);
 $relatorioController = new RelatorioController($pdo, $authController);
+$feriasAfastamentoController = new FeriasAfastamentoController($pdo);
 
-
-
-
+// Obter a URI da requisição
 $request = $_SERVER['REQUEST_URI'];
 
-// Remove o prefixo do caminho do projeto e a query string, se houver
-$prefix = '/sistema_produtividade/public';
-$request = strtok(substr($request, strlen($prefix)), '?');
+// Extrair o caminho da requisição removendo a URL base e a query string
+$basePath = parse_url(BASE_URL, PHP_URL_PATH);
+$path = parse_url($request, PHP_URL_PATH);
+
+// Remover o caminho base da URI
+if (!empty($basePath) && strpos($path, $basePath) === 0) {
+    $path = substr($path, strlen($basePath));
+}
 
 // Remover barras no início e no final da string
-$request = trim($request, '/');
+$request = trim($path, '/');
 
 // Se a requisição estiver vazia, defina-a como 'login'
 if (empty($request)) {
     $request = 'login';
+}
+
+// Função auxiliar para redirecionar
+function redirect($path) {
+    header('Location: ' . BASE_URL . '/' . ltrim($path, '/'));
+    exit;
 }
 
 try {
@@ -54,8 +95,7 @@ try {
                 $result = $authController->login();
                 if (isset($result['error'])) {
                     $_SESSION['login_error'] = $result['error'];
-                    header('Location: /sistema_produtividade/public/login');
-                    exit;
+                    redirect('login');
                 }
             }
             require __DIR__ . '/../src/views/login.php';
@@ -63,8 +103,7 @@ try {
 
         case 'logout':
             $authController->logout();
-            header('Location: /sistema_produtividade/public/login');
-            exit;
+            redirect('login');
 
         case 'dashboard-servidor':
             $authController->requireServerAuth();
@@ -94,8 +133,7 @@ try {
                 } else {
                     $_SESSION['profile_error'] = $result['error'];
                 }
-                header('Location: /sistema_produtividade/public/perfil');
-                exit;
+                redirect('perfil');
             }
             $userData = $authController->getCurrentUser();
             $success = $_SESSION['profile_success'] ?? null;
@@ -109,12 +147,10 @@ try {
             if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $result = $servidorController->registerProductivity();
                 if (isset($result['success'])) {
-                    header('Location: /sistema_produtividade/public/dashboard-servidor');
-                    exit;
+                    redirect('dashboard-servidor');
                 } else {
                     $_SESSION['productivity_error'] = $result['error'];
-                    header('Location: /sistema_produtividade/public/registrar-produtividade');
-                    exit;
+                    redirect('registrar-produtividade');
                 }
             }
             $productivityData = $servidorController->registerProductivity();
@@ -177,9 +213,7 @@ try {
                 } else {
                     $_SESSION['error_message'] = $result['error'];
                 }
-                // Redirecionar de volta para a página de gerenciamento de grupos
-                header('Location: /sistema_produtividade/public/manage-groups');
-                exit;
+                redirect('manage-groups');
             }
             break;
 
@@ -192,9 +226,7 @@ try {
                 } else {
                     $_SESSION['error_message'] = $result['error'];
                 }
-                // Redirecionar de volta para a mesma página para exibir a mensagem
-                header('Location: /sistema_produtividade/public/create-group');
-                exit;
+                redirect('create-group');
             }
             require __DIR__ . '/../src/views/create_group.php';
             break;
@@ -238,10 +270,7 @@ try {
             } else {
                 $_SESSION['error_message'] = "ID do usuário ou do grupo não fornecido.";
             }
-            // Redirecionar de volta para a página do grupo
-            header("Location: /sistema_produtividade/public/visualizar-grupo-diretor?id=" . $groupId);
-            exit;
-
+            redirect("visualizar-grupo-diretor?id=" . $groupId);
 
         case 'meu-grupo':
             $authController->requireAuth();
@@ -258,11 +287,9 @@ try {
                 require __DIR__ . '/../src/views/view_group_director.php';
             } else {
                 $_SESSION['error_message'] = 'ID do grupo não fornecido.';
-                header('Location: /sistema_produtividade/public/dashboard-diretor');
-                exit;
+                redirect('dashboard-diretor');
             }
             break;
-
 
         case 'detalhes-grupo':
             $authController->requireAuth();
@@ -277,14 +304,12 @@ try {
 
         case 'gestao-ferias-afastamentos':
             $authController->requireServerAuth(); // Apenas servidores podem acessar
-            $feriasAfastamentoController = new FeriasAfastamentoController($pdo);
             $userData = $feriasAfastamentoController->listarFeriasAfastamentos($_SESSION['user_id']);
             require __DIR__ . '/../src/views/gestao_ferias_afastamentos.php';
             break;
 
         case 'gerenciar-ferias-afastamento':
             $authController->requireDirectorAuth();
-            $feriasAfastamentoController = new FeriasAfastamentoController($pdo);
             $gestaoData = $feriasAfastamentoController->getGestaoFeriasAfastamentosData();
 
             // Garantir que 'currentLeaves' existe no array, mesmo que vazio
@@ -305,7 +330,6 @@ try {
         case 'submit-ferias-afastamento':
             $authController->requireServerAuth();
             if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-                $feriasAfastamentoController = new FeriasAfastamentoController($pdo);
                 $result = $feriasAfastamentoController->registrarFeriasAfastamento(
                     $_SESSION['user_id'],
                     $_POST['tipo_afastamento'],
@@ -320,32 +344,13 @@ try {
                     $_SESSION['error_message'] = 'Erro ao registrar a solicitação de férias/afastamento.';
                 }
 
-                // Redirecionar para a página de gestão de férias e afastamentos
-                header('Location: /sistema_produtividade/public/gestao-ferias-afastamentos');
-                exit;
+                redirect('gestao-ferias-afastamentos');
             }
             break;
-
-
-        case 'submit-ferias-afastamento':
-            $authController->requireServerAuth();
-            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-                $feriasAfastamentoController = new FeriasAfastamentoController($pdo);
-                $result = $feriasAfastamentoController->registrarFeriasAfastamento(
-                    $_SESSION['user_id'],
-                    $_POST['tipo_afastamento'],
-                    $_POST['data_inicio'],
-                    $_POST['data_termino'],
-                    $_POST['comentario']
-                );
-                echo json_encode(['success' => $result]);
-            }
-            exit;
 
         case 'processar-solicitacao-ferias-afastamento':
             $authController->requireDirectorAuth();
             if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-                $feriasAfastamentoController = new FeriasAfastamentoController($pdo);
                 $solicitacaoId = filter_input(INPUT_POST, 'solicitacao_id', FILTER_SANITIZE_NUMBER_INT);
                 $acao = filter_input(INPUT_POST, 'acao', FILTER_SANITIZE_STRING);
 
@@ -365,9 +370,7 @@ try {
                     $_SESSION['error_message'] = 'Dados inválidos para processar a solicitação.';
                 }
 
-                // Redirecionar de volta para a página de gerenciamento
-                header('Location: /sistema_produtividade/public/gerenciar-ferias-afastamento');
-                exit;
+                redirect('gerenciar-ferias-afastamento');
             }
             break;
 
@@ -395,10 +398,8 @@ try {
 
         case 'get-activities':
             $authController->requireServerAuth();
-            $servidorController = new ServidorController($pdo, $authController);
             $servidorController->getActivities();
             break;
-
 
         default:
             throw new Exception('Página não encontrada', 404);

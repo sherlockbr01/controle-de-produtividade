@@ -2,6 +2,32 @@
 use Jti30\SistemaProdutividade\Controllers\ServidorController;
 use Jti30\SistemaProdutividade\Controllers\AuthController;
 
+// Verifica se a constante BASE_URL está definida
+if (!defined('BASE_URL')) {
+    // Função para obter a URL base do projeto
+    function getBaseUrl() {
+        $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://';
+        $host = $_SERVER['HTTP_HOST'];
+        $scriptName = $_SERVER['SCRIPT_NAME'];
+        $dirName = dirname($scriptName);
+
+        // Se estiver na raiz do domínio, retorna apenas o protocolo e host
+        if ($dirName == '/' || $dirName == '\\') {
+            return $protocol . $host;
+        }
+
+        // Remove o segmento '/public' do caminho se estiver presente
+        $basePath = $protocol . $host . $dirName;
+        if (strpos($basePath, '/public') !== false) {
+            $basePath = substr($basePath, 0, strpos($basePath, '/public') + 7);
+        }
+
+        return $basePath;
+    }
+
+    define('BASE_URL', getBaseUrl());
+}
+
 // Initialize necessary variables
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../controllers/AuthController.php';
@@ -26,11 +52,10 @@ if ($groupData && isset($groupData['users'])) {
 }
 
 $menuItems = [
-    ['url' => '/sistema_produtividade/public/dashboard-servidor', 'icon' => 'fas fa-home', 'text' => 'Início'],
-    ['url' => '/sistema_produtividade/public/registrar-produtividade', 'icon' => 'fas fa-clipboard-list', 'text' => 'Registrar Produtividade'],
-    ['url' => '/sistema_produtividade/public/meu-grupo', 'icon' => 'fas fa-users', 'text' => 'Meu Grupo'],
-    ['url' => '/sistema_produtividade/public/gestao-ferias-afastamentos', 'icon' => 'fas fa-calendar-alt', 'text' => 'Férias e Afastamentos']
-
+    ['url' => 'dashboard-servidor', 'icon' => 'fas fa-home', 'text' => 'Início'],
+    ['url' => 'registrar-produtividade', 'icon' => 'fas fa-clipboard-list', 'text' => 'Registrar Produtividade'],
+    ['url' => 'meu-grupo', 'icon' => 'fas fa-users', 'text' => 'Meu Grupo'],
+    ['url' => 'gestao-ferias-afastamentos', 'icon' => 'fas fa-calendar-alt', 'text' => 'Férias e Afastamentos']
 ];
 
 $pageTitle = "Meu Grupo";
@@ -43,16 +68,16 @@ $pageTitle = "Meu Grupo";
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $pageTitle; ?></title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <link rel="stylesheet" href="/sistema_produtividade/public/css/view_my_group.css">
-    <link rel="stylesheet" href="/sistema_produtividade/public/css/sidebar.css">
-    <link rel="stylesheet" href="/sistema_produtividade/public/css/header.css">
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>/css/view_my_group.css">
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>/css/sidebar.css">
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>/css/header.css">
 </head>
 <body>
 <div class="dashboard-container">
-    <?php include __DIR__ . '/../compnents/sidebar.php'; ?>
+    <?php include __DIR__ . '/../components/sidebar.php'; ?>
 
     <div class="main-content">
-        <?php include __DIR__ . '/../compnents/header.php'; ?>
+        <?php include __DIR__ . '/../components/header.php'; ?>
 
         <?php if (!$groupData || !isset($groupData['group'])): ?>
             <div class="error-message">Você não está associado a nenhum grupo no momento.</div>

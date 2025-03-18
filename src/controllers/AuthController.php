@@ -6,15 +6,41 @@ use Jti30\SistemaProdutividade\Models\User;
 
 class AuthController {
     private $db;
+    private $baseUrl;
 
     public function __construct($db) {
         $this->db = $db;
+        $this->baseUrl = $this->getBaseUrl();
+    }
+
+    /**
+     * Obtém a URL base do sistema
+     * @return string
+     */
+    private function getBaseUrl() {
+        $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://';
+        $host = $_SERVER['HTTP_HOST'];
+        $scriptName = $_SERVER['SCRIPT_NAME'];
+        $dirName = dirname($scriptName);
+
+        // Se estiver na raiz do domínio, retorna apenas o protocolo e host
+        if ($dirName == '/' || $dirName == '\\') {
+            return $protocol . $host;
+        }
+
+        // Remove o segmento '/public' do caminho se estiver presente
+        $basePath = $protocol . $host . $dirName;
+        if (strpos($basePath, '/public') !== false) {
+            $basePath = substr($basePath, 0, strpos($basePath, '/public') + 7);
+        }
+
+        return $basePath;
     }
 
     public function requireServerAuth() {
         $this->requireAuth();
         if ($_SESSION['user_type'] !== 'servidor') {
-            header('Location: /sistema_produtividade/public/dashboard-diretor');
+            header('Location: ' . $this->baseUrl . '/dashboard-diretor');
             exit;
         }
     }
@@ -28,7 +54,6 @@ class AuthController {
         return null;
     }
 
-
     public function logout() {
         // Destruir todas as variáveis de sessão
         session_unset();
@@ -37,20 +62,20 @@ class AuthController {
         session_destroy();
 
         // Redirecionar para a página de login
-        header('Location: /sistema_produtividade/public/login');
+        header('Location: ' . $this->baseUrl . '/login');
         exit;
     }
 
     public function requireDirectorAuth() {
         if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'diretor') {
-            header('Location: /sistema_produtividade/public/login');
+            header('Location: ' . $this->baseUrl . '/login');
             exit;
         }
     }
 
     public function requireAuth() {
         if (!isset($_SESSION['user_id'])) {
-            header('Location: /sistema_produtividade/public/login');
+            header('Location: ' . $this->baseUrl . '/login');
             exit;
         }
     }
@@ -65,7 +90,7 @@ class AuthController {
             $user = new User($this->db);
             if ($user->create($name, $email, $password, $userType)) {
                 $_SESSION['register_success'] = 'Usuário registrado com sucesso.';
-                header('Location: /sistema_produtividade/public/login');
+                header('Location: ' . $this->baseUrl . '/login');
                 exit;
             } else {
                 $_SESSION['register_error'] = 'Erro ao registrar usuário.';
@@ -91,14 +116,22 @@ class AuthController {
                 $_SESSION['user_type'] = $userData['user_type'];
 
                 if ($userData['user_type'] === 'servidor') {
-                    header('Location: /sistema_produtividade/public/dashboard-servidor');
+                    header('Location: ' . $this->baseUrl . '/dashboard-servidor');
                 } else {
-                    header('Location: /sistema_produtividade/public/dashboard-diretor');
+                    header('Location: ' . $this->baseUrl . '/dashboard-diretor');
                 }
                 exit;
             } else {
                 return ['error' => 'Credenciais inválidas.'];
             }
         }
+    }
+
+    /**
+     * Retorna a URL base para uso em outros arquivos
+     * @return string
+     */
+    public function getBaseUrlForViews() {
+        return $this->baseUrl;
     }
 }

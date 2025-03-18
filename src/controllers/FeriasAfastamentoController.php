@@ -10,12 +10,43 @@ class FeriasAfastamentoController
     private $pdo;
     private $authController;
     private $model;
+    private $baseUrl;
 
     public function __construct(PDO $pdo, $authController = null)
     {
         $this->pdo = $pdo;
         $this->authController = $authController;
         $this->model = new FeriasAfastamento($pdo);
+        $this->baseUrl = $this->getBaseUrl();
+    }
+
+    /**
+     * Obtém a URL base do sistema
+     * @return string
+     */
+    private function getBaseUrl() {
+        if ($this->authController && method_exists($this->authController, 'getBaseUrlForViews')) {
+            return $this->authController->getBaseUrlForViews();
+        }
+
+        // Fallback caso o authController não esteja disponível
+        $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://';
+        $host = $_SERVER['HTTP_HOST'];
+        $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
+        $dirName = dirname($scriptName);
+
+        // Se estiver na raiz do domínio, retorna apenas o protocolo e host
+        if ($dirName == '/' || $dirName == '\\') {
+            return $protocol . $host;
+        }
+
+        // Remove o segmento '/public' do caminho se estiver presente
+        $basePath = $protocol . $host . $dirName;
+        if (strpos($basePath, '/public') !== false) {
+            $basePath = substr($basePath, 0, strpos($basePath, '/public') + 7);
+        }
+
+        return $basePath;
     }
 
     public function getDadosPagina()
@@ -60,8 +91,6 @@ class FeriasAfastamentoController
         ];
     }
 
-
-
     private function getTiposAfastamento()
     {
         return $this->model->listarTiposAfastamento();
@@ -105,10 +134,9 @@ class FeriasAfastamentoController
                 $_SESSION['error_message'] = "Erro ao aprovar a solicitação.";
             }
         }
-        header('Location: /sistema_produtividade/public/gerenciar-ferias-afastamento');
+        header('Location: ' . $this->baseUrl . '/gerenciar-ferias-afastamento');
         exit;
     }
-
 
     public function getGestaoFeriasAfastamentosData() {
         return [
@@ -118,7 +146,7 @@ class FeriasAfastamentoController
             'pendingLeaveRequests' => $this->getPendingLeaveRequestsDetails(),
             'totalVacations' => $this->getTotalVacations(),
             'totalLeaves' => $this->getTotalLeaves(),
-            'currentLeaves' => $this->getCurrentLeaves(), // Adicionando esta linha
+            'currentLeaves' => $this->getCurrentLeaves(),
         ];
     }
 
@@ -136,9 +164,10 @@ class FeriasAfastamentoController
                 $_SESSION['error_message'] = "Erro ao rejeitar a solicitação.";
             }
         }
-        header('Location: /sistema_produtividade/public/gerenciar-ferias-afastamento');
+        header('Location: ' . $this->baseUrl . '/gerenciar-ferias-afastamento');
         exit;
     }
+
     public function handleFormSubmission($postData) {
         $this->authController->requireAuth();
         $userId = $_SESSION['user_id'];

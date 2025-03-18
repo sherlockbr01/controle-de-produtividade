@@ -1,6 +1,32 @@
 <?php
 use Jti30\SistemaProdutividade\Controllers\RelatorioController;
 
+// Verifica se a constante BASE_URL está definida
+if (!defined('BASE_URL')) {
+    // Função para obter a URL base do projeto
+    function getBaseUrl() {
+        $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://';
+        $host = $_SERVER['HTTP_HOST'];
+        $scriptName = $_SERVER['SCRIPT_NAME'];
+        $dirName = dirname($scriptName);
+
+        // Se estiver na raiz do domínio, retorna apenas o protocolo e host
+        if ($dirName == '/' || $dirName == '\\') {
+            return $protocol . $host;
+        }
+
+        // Remove o segmento '/public' do caminho se estiver presente
+        $basePath = $protocol . $host . $dirName;
+        if (strpos($basePath, '/public') !== false) {
+            $basePath = substr($basePath, 0, strpos($basePath, '/public') + 7);
+        }
+
+        return $basePath;
+    }
+
+    define('BASE_URL', getBaseUrl());
+}
+
 require_once __DIR__ . '/../../vendor/autoload.php';
 
 // Certifique-se de que as variáveis $pdo e $authController estão definidas
@@ -19,10 +45,10 @@ $pageTitle = "Relatório Detalhado";
 
 // Define os itens do menu
 $menuItems = [
-    ['url' => '/sistema_produtividade/public/dashboard-diretor', 'icon' => 'fas fa-home', 'text' => 'Início'],
-    ['url' => '/sistema_produtividade/public/manage-groups', 'icon' => 'fas fa-users', 'text' => 'Gerenciar Grupos'],
-    ['url' => '/sistema_produtividade/public/relatorio-detalhado', 'icon' => 'fas fa-tools', 'text' => 'Gerar Relatórios'],
-    ['url' => '/sistema_produtividade/public/gerenciar-ferias-afastamento', 'icon' => 'fas fa-calendar-alt', 'text' => 'Gerenciar Férias e Afastamentos']
+    ['url' => 'dashboard-diretor', 'icon' => 'fas fa-home', 'text' => 'Início'],
+    ['url' => 'manage-groups', 'icon' => 'fas fa-users', 'text' => 'Gerenciar Grupos'],
+    ['url' => 'relatorio-detalhado', 'icon' => 'fas fa-tools', 'text' => 'Gerar Relatórios'],
+    ['url' => 'gerenciar-ferias-afastamento', 'icon' => 'fas fa-calendar-alt', 'text' => 'Gerenciar Férias e Afastamentos']
 ];
 ?>
 
@@ -32,22 +58,22 @@ $menuItems = [
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $pageTitle; ?></title>
-    <link rel="stylesheet" href="/sistema_produtividade/public/css/relatorio.css">
-    <link rel="stylesheet" href="/sistema_produtividade/public/css/sidebar.css">
-    <link rel="stylesheet" href="/sistema_produtividade/public/css/header.css">
-    <link rel="stylesheet" href="/sistema_produtividade/public/css/all.min.css">
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>/css/relatorio.css">
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>/css/sidebar.css">
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>/css/header.css">
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>/css/all.min.css">
 </head>
 <body>
 <div class="dashboard-container">
-    <?php include __DIR__ . '/../compnents/sidebar.php'; ?>
+    <?php include __DIR__ . '/../components/sidebar.php'; ?>
 
     <div class="main-content">
-        <?php include __DIR__ . '/../compnents/header.php'; ?>
+        <?php include __DIR__ . '/../components/header.php'; ?>
 
         <div class="content-wrapper">
             <div class="filter-form">
                 <h2>Filtro de relatórios</h2>
-                <form action="" method="GET" id="reportForm">
+                <form action="<?php echo BASE_URL; ?>/relatorio-detalhado" method="GET" id="reportForm">
                     <div class="form-group">
                         <label for="user_id">Selecionar Usuário:</label>
                         <select name="user_id" id="user_id">

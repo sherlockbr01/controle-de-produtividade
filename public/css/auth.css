@@ -1,5 +1,5 @@
 body {
-    background-image: url('/sistema_produtividade/public/images/fundo.jpg');
+    background-image: url('../images/fundo.jpg');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
@@ -23,7 +23,6 @@ body {
     text-align: center;
     color: #fff;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-    animation: fadeIn 1s ease-out;
 }
 
 .intro-title {
@@ -47,24 +46,12 @@ body {
     max-width: 400px;
     width: 100%;
     text-align: center;
-    animation: fadeIn 0.5s ease-out;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-20px); }
-    to { opacity: 1; transform: translateY(0); }
 }
 
 .auth-title {
     font-size: 28px;
     margin-bottom: 20px;
     color: #333333;
-    animation: slideDown 0.5s ease-out;
-}
-
-@keyframes slideDown {
-    from { transform: translateY(-100%); }
-    to { transform: translateY(0); }
 }
 
 .form-container {
@@ -113,13 +100,11 @@ body {
     cursor: pointer;
     font-size: 16px;
     width: 100%;
-    transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+    transition: background-color 0.3s ease;
 }
 
 .btn:hover {
     background-color: #0056b3;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 .error {
@@ -145,10 +130,11 @@ body {
 .auth-link a:hover {
     text-decoration: underline;
 }
+
 .success-message {
-    background-color: #d4edda; /* Verde claro */
-    color: #155724; /* Verde escuro */
-    border: 1px solid #c3e6cb; /* Borda verde */
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
     padding: 10px;
     margin-bottom: 15px;
     border-radius: 5px;

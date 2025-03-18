@@ -1,4 +1,30 @@
 <?php
+// Verifica se a constante BASE_URL está definida
+if (!defined('BASE_URL')) {
+    // Função para obter a URL base do projeto
+    function getBaseUrl() {
+        $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://';
+        $host = $_SERVER['HTTP_HOST'];
+        $scriptName = $_SERVER['SCRIPT_NAME'];
+        $dirName = dirname($scriptName);
+
+        // Se estiver na raiz do domínio, retorna apenas o protocolo e host
+        if ($dirName == '/' || $dirName == '\\') {
+            return $protocol . $host;
+        }
+
+        // Remove o segmento '/public' do caminho se estiver presente
+        $basePath = $protocol . $host . $dirName;
+        if (strpos($basePath, '/public') !== false) {
+            $basePath = substr($basePath, 0, strpos($basePath, '/public') + 7);
+        }
+
+        return $basePath;
+    }
+
+    define('BASE_URL', getBaseUrl());
+}
+
 use Jti30\SistemaProdutividade\Controllers\GroupController;
 
 // Verifique se o usuário está autenticado como diretor
@@ -11,12 +37,12 @@ $allGroups = $groupController->getAllGroups();
 
 // Definir os itens de menu para esta página
 $menuItems = [
-    ['url' => '/sistema_produtividade/public/dashboard-diretor', 'icon' => 'fas fa-home', 'text' => 'Início'],
-    ['url' => '/sistema_produtividade/public/create-group', 'icon' => 'fas fa-plus-circle', 'text' => 'Criar Grupo'],
-    ['url' => '/sistema_produtividade/public/manage-groups', 'icon' => 'fas fa-users', 'text' => 'Gerenciar Grupos'],
-    ['url' => '/sistema_produtividade/public/assign-user-group', 'icon' => 'fas fa-user-plus', 'text' => 'Atribuir Usuário a Grupo'],
-    ['url' => '/sistema_produtividade/public/relatorios', 'icon' => 'fas fa-chart-bar', 'text' => 'Relatórios'],
-    ['url' => '/sistema_produtividade/public/gerenciar-ferias-afastamento', 'icon' => 'fas fa-calendar-alt', 'text' => 'Férias e Afastamentos']
+    ['url' => 'dashboard-diretor', 'icon' => 'fas fa-home', 'text' => 'Início'],
+    ['url' => 'create-group', 'icon' => 'fas fa-plus-circle', 'text' => 'Criar Grupo'],
+    ['url' => 'manage-groups', 'icon' => 'fas fa-users', 'text' => 'Gerenciar Grupos'],
+    ['url' => 'assign-user-group', 'icon' => 'fas fa-user-plus', 'text' => 'Atribuir Usuário a Grupo'],
+    ['url' => 'relatorios', 'icon' => 'fas fa-chart-bar', 'text' => 'Relatórios'],
+    ['url' => 'gerenciar-ferias-afastamento', 'icon' => 'fas fa-calendar-alt', 'text' => 'Férias e Afastamentos']
 ];
 ?>
 
@@ -26,17 +52,17 @@ $menuItems = [
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gerenciar Grupos</title>
-    <link rel="stylesheet" href="/sistema_produtividade/public/css/manage_groups.css">
-    <link rel="stylesheet" href="/sistema_produtividade/public/css/sidebar.css">
-    <link rel="stylesheet" href="/sistema_produtividade/public/css/header.css">
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>/css/manage_groups.css">
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>/css/sidebar.css">
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>/css/header.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
 </head>
 <body>
 <div class="dashboard-container">
-    <?php include __DIR__ . '/../compnents/sidebar.php'; ?>
+    <?php include __DIR__ . '/../components/sidebar.php'; ?>
 
     <div class="main-content">
-        <?php include __DIR__ . '/../compnents/header.php'; ?>
+        <?php include __DIR__ . '/../components/header.php'; ?>
 
         <div class="content-wrapper">
             <h1>Gerenciar Grupos</h1>
@@ -69,7 +95,7 @@ $menuItems = [
                                 </div>
                             </div>
                             <div class="group-actions">
-                                <a href="/sistema_produtividade/public/visualizar-grupo-diretor?id=<?php echo htmlspecialchars($group['id']); ?>" class="btn btn-view">Ver Grupo</a>
+                                <a href="<?php echo BASE_URL; ?>/visualizar-grupo-diretor?id=<?php echo htmlspecialchars($group['id']); ?>" class="btn btn-view">Ver Grupo</a>
                                 <button class="btn btn-delete" onclick="confirmDelete(<?php echo htmlspecialchars($group['id']); ?>, '<?php echo htmlspecialchars($group['name']); ?>')">Excluir Grupo</button>
                             </div>
                         </li>
@@ -120,7 +146,7 @@ $menuItems = [
             // Enviar solicitação de exclusão
             var form = document.createElement('form');
             form.method = 'POST';
-            form.action = '/sistema_produtividade/public/delete-group';
+            form.action = '<?php echo BASE_URL; ?>/delete-group';
             var input = document.createElement('input');
             input.type = 'hidden';
             input.name = 'group_id';

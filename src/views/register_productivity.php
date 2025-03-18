@@ -2,11 +2,37 @@
 use Jti30\SistemaProdutividade\Controllers\ServidorController;
 use Jti30\SistemaProdutividade\Controllers\AuthController;
 
+// Verifica se a constante BASE_URL está definida
+if (!defined('BASE_URL')) {
+    // Função para obter a URL base do projeto
+    function getBaseUrl() {
+        $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://';
+        $host = $_SERVER['HTTP_HOST'];
+        $scriptName = $_SERVER['SCRIPT_NAME'];
+        $dirName = dirname($scriptName);
+
+        // Se estiver na raiz do domínio, retorna apenas o protocolo e host
+        if ($dirName == '/' || $dirName == '\\') {
+            return $protocol . $host;
+        }
+
+        // Remove o segmento '/public' do caminho se estiver presente
+        $basePath = $protocol . $host . $dirName;
+        if (strpos($basePath, '/public') !== false) {
+            $basePath = substr($basePath, 0, strpos($basePath, '/public') + 7);
+        }
+
+        return $basePath;
+    }
+
+    define('BASE_URL', getBaseUrl());
+}
+
 // Incluir o arquivo de configuração do banco de dados
 require_once __DIR__ . '/../config/database.php';
 
 if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'servidor') {
-    header('Location: /sistema_produtividade/public/login');
+    header('Location: ' . BASE_URL . '/login');
     exit;
 }
 
@@ -26,10 +52,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $pageTitle = "Registrar Produtividade";
 
 $menuItems = [
-    ['url' => '/sistema_produtividade/public/dashboard-servidor', 'icon' => 'fas fa-home', 'text' => 'Início'],
-    ['url' => '/sistema_produtividade/public/registrar-produtividade', 'icon' => 'fas fa-clipboard-list', 'text' => 'Registrar Produtividade'],
-    ['url' => '/sistema_produtividade/public/meu-grupo', 'icon' => 'fas fa-users', 'text' => 'Meu Grupo'],
-    ['url' => '/sistema_produtividade/public/gestao-ferias-afastamentos', 'icon' => 'fas fa-calendar-alt', 'text' => 'Férias e Afastamentos']
+    ['url' => 'dashboard-servidor', 'icon' => 'fas fa-home', 'text' => 'Início'],
+    ['url' => 'registrar-produtividade', 'icon' => 'fas fa-clipboard-list', 'text' => 'Registrar Produtividade'],
+    ['url' => 'meu-grupo', 'icon' => 'fas fa-users', 'text' => 'Meu Grupo'],
+    ['url' => 'gestao-ferias-afastamentos', 'icon' => 'fas fa-calendar-alt', 'text' => 'Férias e Afastamentos']
 ];
 ?>
 
@@ -40,23 +66,22 @@ $menuItems = [
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $pageTitle; ?></title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <link rel="stylesheet" href="/sistema_produtividade/public/css/reset.css">
-    <link rel="stylesheet" href="/sistema_produtividade/public/css/register_productivity.css">
-    <link rel="stylesheet" href="/sistema_produtividade/public/css/sidebar.css">
-    <link rel="stylesheet" href="/sistema_produtividade/public/css/header.css">
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>/css/register_productivity.css">
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>/css/sidebar.css">
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>/css/header.css">
 </head>
 <body>
 <div class="dashboard-container">
-    <?php include __DIR__ . '/../compnents/sidebar.php'; ?>
+    <?php include __DIR__ . '/../components/sidebar.php'; ?>
 
     <div class="main-content">
         <?php
         $headerTitle = $pageTitle;
-        include __DIR__ . '/../compnents/header.php';
+        include __DIR__ . '/../components/header.php';
         ?>
 
         <div class="content-wrapper">
-            <form class="productivity-form" method="POST" action="/sistema_produtividade/public/registrar-produtividade">
+            <form class="productivity-form" method="POST" action="<?php echo BASE_URL; ?>/registrar-produtividade">
                 <?php echo isset($_SESSION['csrf_token']) ? '<input type="hidden" name="csrf_token" value="' . $_SESSION['csrf_token'] . '">' : ''; ?>
 
                 <div class="form-group">
@@ -114,7 +139,7 @@ $menuItems = [
     <div class="modal-content">
         <span class="close" onclick="closeModal('minuteModal')">&times;</span>
         <h2>Adicionar Novo Tipo de Minuta</h2>
-        <form action="/sistema_produtividade/public/adicionar-tipo-minuta" method="POST">
+        <form action="<?php echo BASE_URL; ?>/adicionar-tipo-minuta" method="POST">
             <label for="new_minute_type">Nome do Tipo de Minuta:</label>
             <input type="text" id="new_minute_type" name="new_minute_type" required>
             <button type="button" onclick="addMinuteType()">Adicionar</button>
@@ -163,7 +188,7 @@ $menuItems = [
     function addMinuteType() {
         var newMinuteType = document.getElementById('new_minute_type').value;
         if (newMinuteType) {
-            fetch('/sistema_produtividade/public/add-minute-type', {
+            fetch('<?php echo BASE_URL; ?>/add-minute-type', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',

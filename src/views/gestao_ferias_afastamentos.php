@@ -3,8 +3,34 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+// Verifica se a constante BASE_URL está definida
+if (!defined('BASE_URL')) {
+    // Função para obter a URL base do projeto
+    function getBaseUrl() {
+        $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://';
+        $host = $_SERVER['HTTP_HOST'];
+        $scriptName = $_SERVER['SCRIPT_NAME'];
+        $dirName = dirname($scriptName);
+
+        // Se estiver na raiz do domínio, retorna apenas o protocolo e host
+        if ($dirName == '/' || $dirName == '\\') {
+            return $protocol . $host;
+        }
+
+        // Remove o segmento '/public' do caminho se estiver presente
+        $basePath = $protocol . $host . $dirName;
+        if (strpos($basePath, '/public') !== false) {
+            $basePath = substr($basePath, 0, strpos($basePath, '/public') + 7);
+        }
+
+        return $basePath;
+    }
+
+    define('BASE_URL', getBaseUrl());
+}
+
 if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'servidor') {
-    header('Location: /sistema_produtividade/public/login');
+    header('Location: ' . BASE_URL . '/login');
     exit;
 }
 
@@ -21,13 +47,12 @@ $userAfastamentos = $data['afastamentos'];
 $tiposAfastamento = $data['tiposAfastamento'];
 
 $menuItems = [
-    ['url' => '/sistema_produtividade/public/dashboard-servidor', 'icon' => 'fas fa-home', 'text' => 'Início'],
-    ['url' => '/sistema_produtividade/public/registrar-produtividade', 'icon' => 'fas fa-clipboard-list', 'text' => 'Registrar Produtividade'],
-    ['url' => '/sistema_produtividade/public/meu-grupo', 'icon' => 'fas fa-users', 'text' => 'Meu Grupo'],
-    ['url' => '/sistema_produtividade/public/gestao-ferias-afastamentos', 'icon' => 'fas fa-calendar-alt', 'text' => 'Férias e Afastamentos']
+    ['url' => 'dashboard-servidor', 'icon' => 'fas fa-home', 'text' => 'Início'],
+    ['url' => 'registrar-produtividade', 'icon' => 'fas fa-clipboard-list', 'text' => 'Registrar Produtividade'],
+    ['url' => 'meu-grupo', 'icon' => 'fas fa-users', 'text' => 'Meu Grupo'],
+    ['url' => 'gestao-ferias-afastamentos', 'icon' => 'fas fa-calendar-alt', 'text' => 'Férias e Afastamentos']
 ];
 $pageTitle = "Registrar Férias ou Afastamento";
-
 ?>
 
 <!DOCTYPE html>
@@ -37,9 +62,9 @@ $pageTitle = "Registrar Férias ou Afastamento";
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo htmlspecialchars($pageTitle); ?></title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <link rel="stylesheet" href="/sistema_produtividade/public/css/gestao_ferias_afastamentos.css">
-    <link rel="stylesheet" href="/sistema_produtividade/public/css/sidebar.css">
-    <link rel="stylesheet" href="/sistema_produtividade/public/css/header.css">
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>/css/gestao_ferias_afastamentos.css">
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>/css/sidebar.css">
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>/css/header.css">
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             setTimeout(function() {
@@ -57,24 +82,24 @@ $pageTitle = "Registrar Férias ou Afastamento";
 </head>
 <body class="ferias-afastamentos-page">
 <div class="dashboard-container">
-    <?php include_once __DIR__ . '/../compnents/sidebar.php'; ?>
+    <?php include_once __DIR__ . '/../components/sidebar.php'; ?>
     <div class="main-content">
-        <?php include_once __DIR__ . '/../compnents/header.php'; ?>
+        <?php include_once __DIR__ . '/../components/header.php'; ?>
 
         <main class="dashboard-content">
             <?php
             if (isset($_SESSION['success_message'])) {
-                echo '<div class="alert alert-success">' . $_SESSION['success_message'] . '</div>';
+                echo '<div class="alert alert-success">' . htmlspecialchars($_SESSION['success_message']) . '</div>';
                 unset($_SESSION['success_message']);
             }
 
             if (isset($_SESSION['error_message'])) {
-                echo '<div class="alert alert-danger">' . $_SESSION['error_message'] . '</div>';
+                echo '<div class="alert alert-danger">' . htmlspecialchars($_SESSION['error_message']) . '</div>';
                 unset($_SESSION['error_message']);
             }
             ?>
             <section class="register-section">
-                <form action="/sistema_produtividade/public/submit-ferias-afastamento" method="POST">
+                <form action="<?php echo BASE_URL; ?>/submit-ferias-afastamento" method="POST">
                     <div class="form-group">
                         <label for="tipo_afastamento">Motivo do Afastamento/Férias:</label>
                         <select name="tipo_afastamento" id="tipo_afastamento" required>

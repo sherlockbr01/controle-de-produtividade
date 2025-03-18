@@ -7,18 +7,52 @@ use Jti30\SistemaProdutividade\Models\User;
 use Jti30\SistemaProdutividade\Models\Group;
 use Exception;
 use PDO;
+use PDOException;
 
 class ServidorController {
     private $db;
     private $pdo;
     private $authController;
     private $groupModel;
+    private $baseUrl;
 
     public function __construct($db, $authController) {
         $this->db = $db;
         $this->pdo = $db; // Adicionando a inicialização de $pdo
         $this->authController = $authController;
         $this->groupModel = new Group($db);
+        $this->baseUrl = $this->getBaseUrl();
+    }
+
+    /**
+     * Obtém a URL base do sistema
+     * @return string
+     */
+    private function getBaseUrl() {
+        if (method_exists($this->authController, 'getBaseUrlForViews')) {
+            return $this->authController->getBaseUrlForViews();
+        }
+
+        // Fallback caso o authController não tenha o método necessário
+        $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://';
+        $host = $_SERVER['HTTP_HOST'];
+        $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
+        $dirName = dirname($scriptName);
+
+        // Se estiver na raiz do domínio, retorna apenas o protocolo e host
+        if ($dirName == '/' || $dirName == '\\') {
+            return $protocol . $host;
+        }
+
+        // Caso contrário, retorna o caminho completo até o diretório public
+        $basePath = $protocol . $host . $dirName;
+
+        // Se o script estiver em um subdiretório de public, ajusta para apontar para public
+        if (strpos($basePath, '/public/') !== false) {
+            $basePath = substr($basePath, 0, strpos($basePath, '/public/') + 7);
+        }
+
+        return $basePath;
     }
 
     public function getMyGroup() {
@@ -74,14 +108,14 @@ class ServidorController {
 
                 if ($productivity->registerActivity($userId, $processNumber, $minuteTypeId, $decisionTypeId, $points)) {
                     $_SESSION['success_message'] = 'Produtividade registrada com sucesso.';
-                    header('Location: /sistema_produtividade/public/registrar-produtividade');
+                    header('Location: ' . $this->baseUrl . '/registrar-produtividade');
                     exit;
                 } else {
                     throw new Exception("Erro ao registrar produtividade.");
                 }
             } catch (Exception $e) {
                 $_SESSION['error_message'] = 'Erro ao registrar produtividade: ' . $e->getMessage();
-                header('Location: /sistema_produtividade/public/registrar-produtividade');
+                header('Location: ' . $this->baseUrl . '/registrar-produtividade');
                 exit;
             }
         }
@@ -90,7 +124,8 @@ class ServidorController {
         $productivity = new Productivity($this->db);
         return [
             'minuteTypes' => $productivity->getMinuteTypes($userId),
-            'decisionTypes' => $productivity->getDecisionTypes($userId)
+            'decisionTypes' => $productivity->getDecisionTypes($userId),
+            'baseUrl' => $this->baseUrl
         ];
     }
 
@@ -124,7 +159,8 @@ class ServidorController {
                 'monthlyProductivity' => $monthlyProductivity,
                 'currentPage' => $currentPage,
                 'totalPages' => $totalPages,
-                'totalActivities' => $totalActivities
+                'totalActivities' => $totalActivities,
+                'baseUrl' => $this->baseUrl
             ];
         } catch (Exception $e) {
             return [
@@ -136,7 +172,8 @@ class ServidorController {
                 'currentPage' => 1,
                 'totalPages' => 1,
                 'totalActivities' => 0,
-                'error' => 'Erro ao obter dados do dashboard: ' . $e->getMessage()
+                'error' => 'Erro ao obter dados do dashboard: ' . $e->getMessage(),
+                'baseUrl' => $this->baseUrl
             ];
         }
     }
@@ -181,33 +218,39 @@ class ServidorController {
                         return [
                             'success' => true,
                             'id' => $newId,
-                            'name' => $minuteTypeName
+                            'name' => $minuteTypeName,
+                            'baseUrl' => $this->baseUrl
                         ];
                     } else {
                         return [
                             'success' => false,
-                            'error' => 'Erro ao adicionar tipo de minuta.'
+                            'error' => 'Erro ao adicionar tipo de minuta.',
+                            'baseUrl' => $this->baseUrl
                         ];
                     }
                 } catch (Exception $e) {
                     return [
                         'success' => false,
-                        'error' => 'Erro ao adicionar tipo de minuta: ' . $e->getMessage()
+                        'error' => 'Erro ao adicionar tipo de minuta: ' . $e->getMessage(),
+                        'baseUrl' => $this->baseUrl
                     ];
                 }
             } else {
                 return [
                     'success' => false,
-                    'error' => 'Nome do tipo de minuta é obrigatório.'
+                    'error' => 'Nome do tipo de minuta é obrigatório.',
+                    'baseUrl' => $this->baseUrl
                 ];
             }
         }
 
         return [
             'success' => false,
-            'error' => 'Método não permitido.'
+            'error' => 'Método não permitido.',
+            'baseUrl' => $this->baseUrl
         ];
     }
+
     public function getAssignedGroup($userId) {
         try {
             $stmt = $this->db->prepare("
@@ -250,31 +293,55 @@ class ServidorController {
                 return [
                     'group' => $group,
                     'users' => $users,
-                    'totalPoints' => $totalPoints
+                    'totalPoints' => $totalPoints,
+                    'baseUrl' => $this->baseUrl
                 ];
             }
-            return ['error' => 'Grupo não encontrado para este usuário.'];
+            return [
+                'error' => 'Grupo não encontrado para este usuário.',
+                'baseUrl' => $this->baseUrl
+            ];
         } catch (PDOException $e) {
-            return ['error' => 'Erro ao buscar dados do grupo: ' . $e->getMessage()];
+            return [
+                'error' => 'Erro ao buscar dados do grupo: ' . $e->getMessage(),
+                'baseUrl' => $this->baseUrl
+            ];
         }
     }
 
     public function getActivities() {
-        $userId = $_SESSION['user_id'];
-        $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-        $limit = 5; // Número de atividades por página
-        $offset = ($page - 1) * $limit;
+        try {
+            // Verificar autenticação
+            $this->authController->requireServerAuth();
 
-        $activities = $this->getRecentActivities($userId, $limit, $offset);
-        $totalActivities = $this->getTotalActivities($userId);
-        $totalPages = ceil($totalActivities / $limit);
+            $userId = $_SESSION['user_id'];
+            $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+            $limit = 5; // Número de atividades por página
+            $offset = ($page - 1) * $limit;
 
-        header('Content-Type: application/json');
-        echo json_encode([
-            'activities' => $activities,
-            'currentPage' => $page,
-            'totalPages' => $totalPages
-        ]);
+            $activities = $this->getRecentActivities($userId, $limit, $offset);
+            $totalActivities = $this->getTotalActivities($userId);
+            $totalPages = ceil($totalActivities / $limit);
+
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => true,
+                'activities' => $activities,
+                'currentPage' => $page,
+                'totalPages' => $totalPages,
+                'baseUrl' => $this->baseUrl
+            ]);
+            exit;
+        } catch (Exception $e) {
+            header('Content-Type: application/json');
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'error' => 'Erro ao buscar atividades: ' . $e->getMessage(),
+                'baseUrl' => $this->baseUrl
+            ]);
+            exit;
+        }
     }
 
     private function getTotalActivities($userId) {
@@ -294,10 +361,22 @@ class ServidorController {
             if ($decisionTypeName) {
                 $stmt = $this->db->prepare("INSERT INTO decision_types (name, points) VALUES (?, ?)");
                 $stmt->execute([$decisionTypeName, $points]);
-                return ['success' => true];
+                return [
+                    'success' => true,
+                    'baseUrl' => $this->baseUrl
+                ];
             } else {
-                return ['error' => 'Nome do tipo de decisão é obrigatório.'];
+                return [
+                    'error' => 'Nome do tipo de decisão é obrigatório.',
+                    'baseUrl' => $this->baseUrl
+                ];
             }
         }
+
+        return [
+            'success' => false,
+            'error' => 'Método não permitido.',
+            'baseUrl' => $this->baseUrl
+        ];
     }
 }

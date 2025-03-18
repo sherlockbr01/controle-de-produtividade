@@ -11,11 +11,42 @@ class GroupController {
     private $db;
     private $authController;
     private $groupModel;
+    private $baseUrl;
 
     public function __construct($pdo, AuthController $authController) {
         $this->db = $pdo;
         $this->authController = $authController;
         $this->groupModel = new Group($pdo);
+        $this->baseUrl = $this->getBaseUrl();
+    }
+
+    /**
+     * Obtém a URL base do sistema
+     * @return string
+     */
+    private function getBaseUrl() {
+        if (method_exists($this->authController, 'getBaseUrlForViews')) {
+            return $this->authController->getBaseUrlForViews();
+        }
+
+        // Fallback caso o authController não tenha o método necessário
+        $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://';
+        $host = $_SERVER['HTTP_HOST'];
+        $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
+        $dirName = dirname($scriptName);
+
+        // Se estiver na raiz do domínio, retorna apenas o protocolo e host
+        if ($dirName == '/' || $dirName == '\\') {
+            return $protocol . $host;
+        }
+
+        // Remove o segmento '/public' do caminho se estiver presente
+        $basePath = $protocol . $host . $dirName;
+        if (strpos($basePath, '/public') !== false) {
+            $basePath = substr($basePath, 0, strpos($basePath, '/public') + 7);
+        }
+
+        return $basePath;
     }
 
     public function createGroup() {
@@ -71,7 +102,7 @@ class GroupController {
         } else {
             $_SESSION['error_message'] = 'ID do grupo não fornecido.';
         }
-        header('Location: /sistema_produtividade/public/manage-groups');
+        header('Location: ' . $this->baseUrl . '/manage-groups');
         exit;
     }
 

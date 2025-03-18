@@ -1,4 +1,30 @@
 <?php
+// Verifica se a constante BASE_URL está definida
+if (!defined('BASE_URL')) {
+    // Função para obter a URL base do projeto
+    function getBaseUrl() {
+        $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://';
+        $host = $_SERVER['HTTP_HOST'];
+        $scriptName = $_SERVER['SCRIPT_NAME'];
+        $dirName = dirname($scriptName);
+
+        // Se estiver na raiz do domínio, retorna apenas o protocolo e host
+        if ($dirName == '/' || $dirName == '\\') {
+            return $protocol . $host;
+        }
+
+        // Remove o segmento '/public' do caminho se estiver presente
+        $basePath = $protocol . $host . $dirName;
+        if (strpos($basePath, '/public') !== false) {
+            $basePath = substr($basePath, 0, strpos($basePath, '/public') + 7);
+        }
+
+        return $basePath;
+    }
+
+    define('BASE_URL', getBaseUrl());
+}
+
 use Jti30\SistemaProdutividade\Controllers\ServidorController;
 
 // Instanciar o ServidorController
@@ -10,10 +36,10 @@ $hasGroup = !empty($userGroup);
 
 // Definir os itens de menu para esta página
 $menuItems = [
-    ['url' => '/sistema_produtividade/public/dashboard-servidor', 'icon' => 'fas fa-home', 'text' => 'Início'],
-    ['url' => '/sistema_produtividade/public/registrar-produtividade', 'icon' => 'fas fa-clipboard-list', 'text' => 'Registrar Produtividade'],
-    ['url' => '/sistema_produtividade/public/meu-grupo', 'icon' => 'fas fa-users', 'text' => 'Meu Grupo', 'data-has-group' => $hasGroup ? 'true' : 'false'],
-    ['url' => '/sistema_produtividade/public/gestao-ferias-afastamentos', 'icon' => 'fas fa-calendar-alt', 'text' => 'Férias e Afastamentos']
+    ['url' => 'dashboard-servidor', 'icon' => 'fas fa-home', 'text' => 'Início'],
+    ['url' => 'registrar-produtividade', 'icon' => 'fas fa-clipboard-list', 'text' => 'Registrar Produtividade'],
+    ['url' => 'meu-grupo', 'icon' => 'fas fa-users', 'text' => 'Meu Grupo', 'data-has-group' => $hasGroup ? 'true' : 'false'],
+    ['url' => 'gestao-ferias-afastamentos', 'icon' => 'fas fa-calendar-alt', 'text' => 'Férias e Afastamentos']
 ];
 
 // Definir o título da página
@@ -26,18 +52,18 @@ $pageTitle = "Dashboard do Servidor";
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $pageTitle; ?> - Sistema de Produtividade</title>
-    <link rel="stylesheet" href="/sistema_produtividade/public/css/dashboard.css">
-    <link rel="stylesheet" href="/sistema_produtividade/public/css/sidebar.css">
-    <link rel="stylesheet" href="/sistema_produtividade/public/css/header.css">
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>/css/dashboard.css">
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>/css/sidebar.css">
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>/css/header.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 <div class="dashboard-container">
-    <?php include __DIR__ . '/../compnents/sidebar.php'; ?>
+    <?php include __DIR__ . '/../components/sidebar.php'; ?>
 
     <div class="main-content">
-        <?php include __DIR__ . '/../compnents/header.php'; ?>
+        <?php include __DIR__ . '/../components/header.php'; ?>
 
         <main class="dashboard">
             <section class="dashboard-summary">
@@ -94,13 +120,29 @@ $pageTitle = "Dashboard do Servidor";
 <script>
     // Função para carregar os dados da página
     function loadPage(page) {
-        fetch(`/sistema_produtividade/public/get-activities?page=${page}`)
-            .then(response => response.json())
-            .then(data => {
-                updateActivitiesTable(data.activities);
-                updatePagination(data.currentPage, data.totalPages);
+        // Usar apenas BASE_URL sem concatenar com window.location.origin
+        fetch(`${BASE_URL}/get-activities?page=${page}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Erro na resposta da rede: ' + response.status);
+                }
+                return response.json();
             })
-            .catch(error => console.error('Error:', error));
+            .then(data => {
+                if (data.success) {
+                    updateActivitiesTable(data.activities);
+                    updatePagination(data.currentPage, data.totalPages);
+                } else {
+                    console.error('Erro retornado pelo servidor:', data.error);
+                    document.querySelector('#activitiesTable tbody').innerHTML =
+                        `<tr><td colspan="5" class="error-message">${data.error || 'Erro ao carregar atividades'}</td></tr>`;
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao carregar atividades:', error);
+                document.querySelector('#activitiesTable tbody').innerHTML =
+                    '<tr><td colspan="5" class="error-message">Erro ao carregar atividades. Por favor, tente novamente.</td></tr>';
+            });
     }
 
     // Função para atualizar a tabela de atividades
@@ -206,7 +248,8 @@ $pageTitle = "Dashboard do Servidor";
 
     // Função para configurar o link "Meu Grupo"
     function setupMeuGrupoLink() {
-        var meuGrupoLink = document.querySelector('a[href="/sistema_produtividade/public/meu-grupo"]');
+        const baseUrl = '<?php echo BASE_URL; ?>';
+        var meuGrupoLink = document.querySelector(`a[href*="meu-grupo"]`);
         if (meuGrupoLink) {
             meuGrupoLink.addEventListener('click', function(e) {
                 if (this.getAttribute('data-has-group') === 'false') {
@@ -216,6 +259,9 @@ $pageTitle = "Dashboard do Servidor";
             });
         }
     }
+
+    // Definir a constante BASE_URL para uso no JavaScript
+    const BASE_URL = '<?php echo BASE_URL; ?>';
 
     // Carregar a primeira página e inicializar componentes ao carregar a página
     document.addEventListener('DOMContentLoaded', function() {

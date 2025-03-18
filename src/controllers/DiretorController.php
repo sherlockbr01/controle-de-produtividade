@@ -6,14 +6,17 @@ use Jti30\SistemaProdutividade\Models\Group;
 use Jti30\SistemaProdutividade\Models\Productivity;
 use Jti30\SistemaProdutividade\Models\User;
 use PDO;
+use Exception;
 
 class DiretorController {
     private $pdo;
     private $authController;
+    private $baseUrl;
 
     public function __construct(PDO $pdo, $authController) {
         $this->pdo = $pdo;
         $this->authController = $authController;
+        $this->baseUrl = $this->authController->getBaseUrlForViews();
     }
 
     public function getDashboardData() {
@@ -49,8 +52,8 @@ class DiretorController {
     }
 
     public function getGroupDetails($groupId) {
-        $groupModel = new Group($this->pdo);  // Alterado de $this->db para $this->pdo
-        $productivityModel = new Productivity($this->pdo);  // Alterado de $this->db para $this->pdo
+        $groupModel = new Group($this->pdo);
+        $productivityModel = new Productivity($this->pdo);
 
         $group = $groupModel->getGroupById($groupId);
         if (!$group) {
@@ -76,11 +79,12 @@ class DiretorController {
 
         return $groupData;
     }
+
     public function showAssignUserToGroupPage() {
         $this->authController->requireDirectorAuth();
 
-        $groupModel = new Group($this->db);
-        $userModel = new User($this->db);
+        $groupModel = new Group($this->pdo); // Corrigido de $this->db para $this->pdo
+        $userModel = new User($this->pdo); // Corrigido de $this->db para $this->pdo
 
         $allGroups = $groupModel->getAllGroups();
         $allUsers = $userModel->getAllUsers();
@@ -103,7 +107,7 @@ class DiretorController {
             } else {
                 $_SESSION['error_message'] = 'Erro ao atribuir usuário ao grupo.';
             }
-            header('Location: /sistema_produtividade/public/assign-user-group');
+            header('Location: ' . $this->baseUrl . '/assign-user-group');
             exit;
         }
 
@@ -189,6 +193,7 @@ class DiretorController {
             'endDate' => $endDate
         ];
     }
+
     public function removeUserFromGroup($userId, $groupId) {
         $groupModel = new Group($this->pdo);
         try {
@@ -197,9 +202,8 @@ class DiretorController {
             } else {
                 return ['success' => false, 'error' => 'Falha ao remover usuário do grupo. O usuário pode não estar no grupo ou pode ter ocorrido um erro no banco de dados.'];
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return ['success' => false, 'error' => 'Erro ao remover usuário do grupo: ' . $e->getMessage()];
         }
     }
-
 }
