@@ -15,42 +15,19 @@ body {
     overflow: hidden;
 }
 
-.intro-container {
-    position: absolute;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    text-align: center;
-    color: #fff;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-}
-
-.intro-title {
-    font-size: 36px;
-    margin-bottom: 10px;
-    color: #ffffff;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7);
-}
-
-.intro-text {
-    font-size: 20px;
-    color: #dddddd;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
-}
-
 .auth-container {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(240, 240, 240, 0.9));
-    padding: 30px;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 40px;
     border-radius: 12px;
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
     max-width: 400px;
     width: 100%;
     text-align: center;
 }
 
 .auth-title {
-    font-size: 28px;
-    margin-bottom: 20px;
+    font-size: 32px;
+    margin-bottom: 25px;
     color: #333333;
 }
 
@@ -59,20 +36,20 @@ body {
 }
 
 .form-group {
-    margin-bottom: 15px;
+    margin-bottom: 20px;
     text-align: left;
 }
 
 .form-group label {
     display: block;
-    margin-bottom: 5px;
+    margin-bottom: 8px;
     color: #555555;
 }
 
 .form-group input,
 .form-group select {
     width: 100%;
-    padding: 10px;
+    padding: 12px;
     border: 1px solid #dddddd;
     border-radius: 4px;
     font-size: 16px;
@@ -94,7 +71,7 @@ body {
 .btn {
     background-color: #007bff;
     color: #ffffff;
-    padding: 10px 15px;
+    padding: 12px 20px;
     border: none;
     border-radius: 4px;
     cursor: pointer;
@@ -117,8 +94,12 @@ body {
     margin-bottom: 15px;
 }
 
-.auth-link {
+.auth-footer {
     margin-top: 20px;
+}
+
+.auth-link {
+    margin-top: 10px;
     color: #007bff;
 }
 
@@ -139,4 +120,40 @@ body {
     margin-bottom: 15px;
     border-radius: 5px;
     text-align: center;
+}
+
+.info-message {
+    background-color: #e7f3fe;
+    border-left: 6px solid #2196F3;
+    margin-bottom: 15px;
+    padding: 10px;
+    color: #0c5460;
+}
+.intro-container {
+    position: absolute;
+    top: 5%;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    color: #fff;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    width: 100%;
+    max-width: 600px; /* Aumenta a largura máxima */
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+.intro-title {
+    font-size: 36px; /* Ajusta o tamanho da fonte */
+    margin-bottom: 10px;
+    color: #ffffff;
+    text-shadow: 0 3px 6px rgba(0, 0, 0, 0.7);
+    white-space: nowrap; /* Garante que o texto não quebre */
+}
+
+.intro-text {
+    font-size: 18px; /* Ajusta o tamanho da fonte */
+    color: #dddddd;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    margin-bottom: 20px;
 }

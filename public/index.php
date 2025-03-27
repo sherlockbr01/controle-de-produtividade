@@ -1,8 +1,12 @@
 <?php
 session_start();
 
-// Autoloader
+// Carregar variáveis de ambiente
 require_once __DIR__ . '/../vendor/autoload.php';
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..');
+$dotenv->load();
+
+// Resto do seu código existente
 require_once __DIR__ . '/../src/config/database.php';
 
 use Jti30\SistemaProdutividade\Controllers\AuthController;
@@ -11,6 +15,11 @@ use Jti30\SistemaProdutividade\Controllers\DiretorController;
 use Jti30\SistemaProdutividade\Controllers\GroupController;
 use Jti30\SistemaProdutividade\Controllers\FeriasAfastamentoController;
 use Jti30\SistemaProdutividade\Controllers\RelatorioController;
+use Jti30\SistemaProdutividade\Controllers\ProfilePhotoController;
+
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 
 // Definir a URL base do projeto
 function getBaseUrl() {
@@ -56,6 +65,9 @@ $diretorController = new DiretorController($pdo, $authController);
 $groupController = new GroupController($pdo, $authController);
 $relatorioController = new RelatorioController($pdo, $authController);
 $feriasAfastamentoController = new FeriasAfastamentoController($pdo);
+$profilePhotoController = new ProfilePhotoController($pdo);
+
+
 
 // Obter a URI da requisição
 $request = $_SERVER['REQUEST_URI'];
@@ -86,8 +98,21 @@ function redirect($path) {
 try {
     switch ($request) {
         case 'register':
-            $authController->register();
-            include __DIR__ . '/../src/views/register.php';
+            $authController->requireDirectorAuth();
+            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                $result = $authController->register();
+                if (is_array($result) && isset($result['success'])) {
+                    if ($result['success']) {
+                        $_SESSION['success_message'] = 'Usuário cadastrado com sucesso!';
+                    } else {
+                        $_SESSION['error_message'] = 'Erro ao cadastrar usuário: ' . ($result['error'] ?? 'Erro desconhecido');
+                    }
+                } else {
+                    $_SESSION['error_message'] = 'Erro ao processar o registro. Por favor, tente novamente.';
+                }
+                redirect('register');
+            }
+            require __DIR__ . '/../src/views/register.php';
             break;
 
         case 'login':
@@ -400,6 +425,80 @@ try {
             $authController->requireServerAuth();
             $servidorController->getActivities();
             break;
+
+        case 'update-profile':
+            $authController->requireAuth();
+            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                $result = $authController->updateProfile();
+                header('Content-Type: application/json');
+                echo json_encode($result);
+                exit;
+            }
+            break;
+
+        case 'update-password':
+            $authController->requireAuth();
+            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                $result = $authController->updatePassword(
+                    $_POST['current_password'],
+                    $_POST['new_password'],
+                    $_POST['confirm_password']
+                );
+                header('Content-Type: application/json');
+                echo json_encode($result);
+                exit;
+            }
+            break;
+
+        case 'forgot-password':
+            require __DIR__ . '/../src/views/forgot_password.php';
+            break;
+
+        case 'request-password-reset':
+            $result = $authController->requestPasswordReset();
+            if (isset($result['redirect'])) {
+                redirect('reset-password');
+            } else {
+                $_SESSION['reset_message'] = $result['success'] ?? $result['error'];
+                redirect('forgot-password');
+            }
+            break;
+
+        case 'reset-password':
+            if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+                require __DIR__ . '/../src/views/reset_password.php';
+            } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                $result = $authController->resetPassword();
+                if (isset($result['success'])) {
+                    $_SESSION['reset_message'] = $result['success'];
+                    redirect('login');
+                } else {
+                    $_SESSION['reset_error'] = $result['error'];
+                    redirect('reset-password');
+                }
+            }
+            break;
+
+
+        case 'get-monthly-data':
+            $year = $_GET['year'] ?? date('Y');
+            $month = $_GET['month'] ?? date('m');
+            $servidorController = new \Jti30\SistemaProdutividade\Controllers\ServidorController($pdo, $authController);
+            $data = $servidorController->getUserProductivity($year, $month);
+            header('Content-Type: application/json');
+            echo json_encode(['success' => true, 'data' => $data]);
+            exit;
+
+        case 'get-yearly-productivity':
+            $authController->requireDirectorAuth();
+            $year = $_GET['year'] ?? date('Y');
+            error_log("Solicitação de produtividade anual para o ano: $year");
+            $yearlyData = $diretorController->getYearlyProductivity($year);
+            error_log("Dados anuais retornados: " . json_encode($yearlyData));
+            header('Content-Type: application/json');
+            echo json_encode($yearlyData);
+            exit;
+
 
         default:
             throw new Exception('Página não encontrada', 404);

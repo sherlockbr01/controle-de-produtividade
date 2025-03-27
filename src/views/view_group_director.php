@@ -58,9 +58,11 @@ $userName = $_SESSION['user_name'] ?? '';
 // Define os itens do menu
 $menuItems = [
     ['url' => 'dashboard-diretor', 'icon' => 'fas fa-home', 'text' => 'Início'],
-    ['url' => 'manage-groups', 'icon' => 'fas fa-users-cog', 'text' => 'Gerenciar Grupos'],
+    ['url' => 'manage-groups', 'icon' => 'fas fa-users', 'text' => 'Gerenciar Grupos'],
     ['url' => 'create-group', 'icon' => 'fas fa-plus-circle', 'text' => 'Criar Grupo'],
-    ['url' => 'assign-user-group', 'icon' => 'fas fa-user-plus', 'text' => 'Atribuir Usuário a Grupo']
+    ['url' => 'assign-user-group', 'icon' => 'fas fa-user-plus', 'text' => 'Atribuir Usuário a Grupo'],
+    ['url' => 'relatorio-detalhado', 'icon' => 'fas fa-chart-bar', 'text' => 'Relatórios'],
+    ['url' => 'gerenciar-ferias-afastamento', 'icon' => 'fas fa-calendar-alt', 'text' => 'Férias e Afastamentos']
 ];
 ?>
 
@@ -82,19 +84,29 @@ $menuItems = [
     <div class="main-content">
         <?php include __DIR__ . '/../components/header.php'; ?>
 
-        <?php if (isset($_SESSION['success_message'])): ?>
-            <div class="success-message" id="success-message">
-                <?= htmlspecialchars($_SESSION['success_message']); ?>
-            </div>
-            <?php unset($_SESSION['success_message']); ?>
-        <?php endif; ?>
-
         <?php if (!$groupData || !isset($groupData['group'])): ?>
             <div class="error-message">Grupo não encontrado.</div>
         <?php else: ?>
             <div class="group-card">
                 <h2>Grupo: <?php echo htmlspecialchars($groupData['group']['name'] ?? 'N/A'); ?></h2>
                 <p><strong>Descrição:</strong> <?php echo htmlspecialchars($groupData['group']['description'] ?? 'N/A'); ?></p>
+            </div>
+
+            <!-- Exibir mensagens de sucesso ou erro -->
+            <div class="alert-container" style="margin-top: 20px; max-width: 400px; margin-left: auto; margin-right: auto;">
+                <?php if (isset($_SESSION['success_message'])): ?>
+                    <p class="alert success-message" style="color:#28a745; padding:10px; margin:0; border-radius:4px; background-color:rgba(40,167,69,0.1); text-align:center; font-size: 14px;">
+                        <?php echo $_SESSION['success_message']; ?>
+                    </p>
+                    <?php unset($_SESSION['success_message']); ?>
+                <?php endif; ?>
+
+                <?php if (isset($_SESSION['error_message'])): ?>
+                    <p class="alert error-message" style="color:#dc3545; padding:10px; margin:0; border-radius:4px; background-color:rgba(220,53,69,0.1); text-align:center; font-size: 14px;">
+                        <?php echo $_SESSION['error_message']; ?>
+                    </p>
+                    <?php unset($_SESSION['error_message']); ?>
+                <?php endif; ?>
             </div>
 
             <h3 class="section-title">Membros do Grupo</h3>
@@ -149,13 +161,28 @@ $menuItems = [
 </div>
 
 <script>
-    // Faz a mensagem de sucesso desaparecer após 5 segundos
-    setTimeout(function() {
-        var successMessage = document.getElementById('success-message');
-        if (successMessage) {
-            successMessage.style.display = 'none';
-        }
-    }, 5000);
+    // Função para fazer a mensagem desaparecer
+    function fadeOutMessage(messageElement) {
+        var opacity = 1;
+        var timer = setInterval(function() {
+            if (opacity <= 0.1) {
+                clearInterval(timer);
+                messageElement.style.display = 'none';
+            }
+            messageElement.style.opacity = opacity;
+            opacity -= opacity * 0.1;
+        }, 50);
+    }
+
+    // Seleciona todas as mensagens
+    var messages = document.querySelectorAll('.success-message, .error-message');
+
+    // Para cada mensagem, configura um temporizador para fazê-la desaparecer
+    messages.forEach(function(message) {
+        setTimeout(function() {
+            fadeOutMessage(message);
+        }, 7000); // 7000 milissegundos = 7 segundos
+    });
 
     document.addEventListener('DOMContentLoaded', function() {
         const modal = document.getElementById('confirmModal');

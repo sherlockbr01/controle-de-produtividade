@@ -59,92 +59,19 @@ class Productivity
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function getRecentActivities($userId, $limit = 5, $offset = 0) {
-        $stmt = $this->db->prepare("
-        SELECT 
-            p.process_number, 
-            mt.name AS minute_type, 
-            dt.name AS decision_type, 
-            p.points, 
-            p.created_at
-        FROM 
-            productivity p
-        JOIN 
-            minute_types mt ON p.minute_type_id = mt.id
-        JOIN 
-            decision_types dt ON p.decision_type_id = dt.id
-        WHERE 
-            p.user_id = ?
-        ORDER BY 
-            p.created_at DESC
-        LIMIT ? OFFSET ?
-    ");
-        $stmt->execute([$userId, $limit, $offset]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-    public function getMonthlyProductivity($userId) {
-        $stmt = $this->db->prepare("
-        SELECT 
-            DATE_FORMAT(date, '%Y-%m') as month, 
-            SUM(points) as points
-        FROM productivity
-        WHERE user_id = ?
-        GROUP BY month
-        ORDER BY month
-    ");
-        $stmt->execute([$userId]);
-        return $stmt->fetchAll();
+    public function getUserTotalProductivity($userId) {
+        $stmt = $this->db->prepare("SELECT SUM(points) as totalPoints, COUNT(*) as completedProcesses FROM productivity WHERE user_id = :userId");
+        $stmt->execute([':userId' => $userId]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function getUserTotalPoints($userId)
-    {
-        $stmt = $this->db->prepare("SELECT SUM(points) as total FROM productivity WHERE user_id = ?");
-        $stmt->execute([$userId]);
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $result['total'] ?? 0;
-    }
-
-    public function getUserCompletedProcesses($userId)
-    {
-        $stmt = $this->db->prepare("SELECT COUNT(*) as total FROM productivity WHERE user_id = ?");
-        $stmt->execute([$userId]);
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $result['total'] ?? 0;
-    }
-
-    public function getUserEfficiency($userId)
-    {
-        $stmt = $this->db->prepare("SELECT AVG(points) as efficiency FROM productivity WHERE user_id = ?");
-        $stmt->execute([$userId]);
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $result['efficiency'] ?? 0;
-    }
-
-    public function getUserMonthlyProductivity($userId)
-    {
-        $stmt = $this->db->prepare("
-            SELECT DATE_FORMAT(date, '%Y-%m') as month, SUM(points) as total
-            FROM productivity
-            WHERE user_id = ?
-            GROUP BY DATE_FORMAT(date, '%Y-%m')
-            ORDER BY month DESC
-            LIMIT 12
-        ");
-        $stmt->execute([$userId]);
+    public function getRecentActivities($userId) {
+        $stmt = $this->db->prepare("SELECT process_number, minute_type, decision_type, points, created_at FROM productivity WHERE user_id = :userId ORDER BY created_at DESC LIMIT 5");
+        $stmt->execute([':userId' => $userId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function getUserRecentActivities($userId, $limit)
-    {
-        $stmt = $this->db->prepare("
-            SELECT * FROM productivity
-            WHERE user_id = ?
-            ORDER BY date DESC, id DESC
-            LIMIT ?
-        ");
-        $stmt->execute([$userId, $limit]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
+
 
     public function registerActivity($userId, $processNumber, $minuteTypeId, $decisionTypeId)
     {
@@ -234,30 +161,7 @@ class Productivity
         return $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
     }
 
-    public function getUserHistory($userId, $startDate, $endDate)
-    {
-        $stmt = $this->db->prepare("
-            SELECT * FROM productivity
-            WHERE user_id = ? AND date BETWEEN ? AND ?
-            ORDER BY date DESC, id DESC
-        ");
-        $stmt->execute([$userId, $startDate, $endDate]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
 
-    public function getUserSummary($userId, $startDate, $endDate)
-    {
-        $stmt = $this->db->prepare("
-            SELECT 
-                COUNT(*) as total_processes,
-                SUM(points) as total_points,
-                AVG(points) as average_points
-            FROM productivity
-            WHERE user_id = ? AND date BETWEEN ? AND ?
-        ");
-        $stmt->execute([$userId, $startDate, $endDate]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
-    }
 
     public function getUserProductivitySummary($userId) {
         $stmt = $this->db->prepare("
@@ -271,36 +175,11 @@ class Productivity
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function getUserPerformanceData($userId)
-    {
-        $stmt = $this->db->prepare("
-            SELECT 
-                DATE_FORMAT(date, '%Y-%m') as month,
-                SUM(points) as total_points,
-                COUNT(*) as total_processes,
-                AVG(points) as average_points
-            FROM productivity
-            WHERE user_id = ?
-            GROUP BY DATE_FORMAT(date, '%Y-%m')
-            ORDER BY month DESC
-            LIMIT 6
-        ");
-        $stmt->execute([$userId]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-
 
     public function getProductivityByUserId($userId) {
-        $stmt = $this->db->prepare("
-        SELECT 
-            SUM(points) as totalPoints, 
-            COUNT(DISTINCT process_number) as completedProcesses, 
-            AVG(points) as averagePoints
-        FROM productivity
-        WHERE user_id = ?
-    ");
-        $stmt->execute([$userId]);
-        return $stmt->fetch();
+        $stmt = $this->db->prepare("SELECT SUM(points) as totalPoints, COUNT(*) as completedProcesses FROM productivity WHERE user_id = :userId");
+        $stmt->execute([':userId' => $userId]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
     public function decisionTypeExists($decisionTypeId) {
@@ -338,6 +217,20 @@ class Productivity
         return $result['average'] ?? 0;
     }
 
+    public function getProductivityBetweenDates($startDate, $endDate)
+    {
+        $stmt = $this->pdo->prepare("
+        SELECT SUM(points) as totalPoints, COUNT(*) as totalProcesses
+        FROM productivity
+        WHERE date BETWEEN :startDate AND :endDate
+    ");
+        $stmt->execute([':startDate' => $startDate, ':endDate' => $endDate]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+
+
+
     public function getTopServers($limit)
     {
         $stmt = $this->db->prepare("
@@ -357,110 +250,43 @@ class Productivity
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function getGroupProductivityDetails($groupId)
-    {
-        $stmt = $this->db->prepare("
-        SELECT 
-            g.id as group_id, 
-            g.name as group_name, 
-            u.id as user_id,
-            u.name as user_name,
-            COALESCE(SUM(p.points), 0) as total_points,
-            COUNT(DISTINCT p.id) as completed_processes
-        FROM 
-            groups g
-        JOIN 
-            group_users gu ON g.id = gu.group_id
-        JOIN 
-            users u ON gu.user_id = u.id
-        LEFT JOIN 
-            productivity p ON u.id = p.user_id
-        WHERE 
-            g.id = :group_id
-        GROUP BY 
-            g.id, g.name, u.id, u.name
-        ORDER BY 
-            total_points DESC
-    ");
-        $stmt->execute(['group_id' => $groupId]);
-        $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    public function getProductivityByDateRange($startDate, $endDate) {
+        $query = "SELECT SUM(points) as totalPoints, COUNT(DISTINCT process_number) as totalProcesses
+              FROM productivity
+              WHERE created_at BETWEEN :startDate AND :endDate";
 
-        $stmtTotal = $this->db->prepare("
-        SELECT 
-            SUM(p.points) as group_total_points,
-            COUNT(DISTINCT p.id) as group_total_processes
-        FROM 
-            groups g
-        JOIN 
-            group_users gu ON g.id = gu.group_id
-        JOIN 
-            users u ON gu.user_id = u.id
-        LEFT JOIN 
-            productivity p ON u.id = p.user_id
-        WHERE 
-            g.id = :group_id
-    ");
-        $stmtTotal->execute(['group_id' => $groupId]);
-        $groupTotal = $stmtTotal->fetch(PDO::FETCH_ASSOC);
+        $stmt = $this->db->prepare($query);
+        $stmt->execute([':startDate' => $startDate, ':endDate' => $endDate]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
 
         return [
-            'users' => $users,
-            'group_total' => $groupTotal
+            'totalPoints' => $result['totalPoints'] ?? 0,
+            'totalProcesses' => $result['totalProcesses'] ?? 0
         ];
     }
 
+    public function getUserMonthlyProductivity($userId, $year) {
+        $monthlyData = [];
 
+        for ($month = 1; $month <= 12; $month++) {
+            $startDate = "$year-$month-01";
+            $endDate = date('Y-m-t', strtotime($startDate));
 
-    public function getProductivityByGroup()
-    {
-        $stmt = $this->db->query("
-            SELECT 
-                g.id as group_id, 
-                g.name as group_name, 
-                SUM(p.points) as total_points
-            FROM 
-                groups g
-            JOIN 
-                user_groups ug ON g.id = ug.group_id
-            JOIN 
-                productivity p ON ug.user_id = p.user_id
-            GROUP BY 
-                g.id, g.name
-            ORDER BY 
-                total_points DESC
+            $stmt = $this->db->prepare("
+            SELECT SUM(points) as total_points, COUNT(DISTINCT process_number) as total_processes
+            FROM productivity
+            WHERE user_id = :user_id AND date BETWEEN :start_date AND :end_date
         ");
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
+            $stmt->execute([':user_id' => $userId, ':start_date' => $startDate, ':end_date' => $endDate]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    public function calculatePoints($minuteType, $decisionType)
-    {
-        // Implemente a lógica de cálculo de pontos aqui
-        // Este é apenas um exemplo, ajuste conforme suas regras de negócio
-        $basePoints = 10;
-        $minuteTypeMultiplier = 1;
-        $decisionTypeMultiplier = 1;
-
-        // Ajuste os multiplicadores com base no tipo de minuta e decisão
-        switch ($minuteType) {
-            case 'complexa':
-                $minuteTypeMultiplier = 2;
-                break;
-            case 'simples':
-                $minuteTypeMultiplier = 1;
-                break;
-            // Adicione mais casos conforme necessário
+            $monthlyData[$month] = [
+                'totalPoints' => $result['total_points'] ?? 0,
+                'totalProcesses' => $result['total_processes'] ?? 0
+            ];
         }
 
-        switch ($decisionType) {
-            case 'favoravel':
-                $decisionTypeMultiplier = 1.5;
-                break;
-            case 'desfavoravel':
-                $decisionTypeMultiplier = 1;
-                break;
-            // Adicione mais casos conforme necessário
-        }
-
-        return $basePoints * $minuteTypeMultiplier * $decisionTypeMultiplier;
+        return $monthlyData;
     }
+
 }

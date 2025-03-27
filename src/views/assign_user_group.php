@@ -33,7 +33,12 @@ $menuItems = [
     ['url' => 'dashboard-diretor', 'icon' => 'fas fa-home', 'text' => 'Início'],
     ['url' => 'create-group', 'icon' => 'fas fa-plus-circle', 'text' => 'Criar Grupo'],
     ['url' => 'manage-groups', 'icon' => 'fas fa-users', 'text' => 'Gerenciar Grupos'],
+    ['url' => 'assign-user-group', 'icon' => 'fas fa-user-plus', 'text' => 'Atribuir Usuário a Grupo'],
+    ['url' => 'relatorio-detalhado', 'icon' => 'fas fa-chart-bar', 'text' => 'Relatórios'],
+    ['url' => 'gerenciar-ferias-afastamento', 'icon' => 'fas fa-calendar-alt', 'text' => 'Férias e Afastamentos']
 ];
+// Definir o título da página
+$pageTitle = "Atribuir Usuário a Grupo";
 ?>
 
 <!DOCTYPE html>
@@ -41,7 +46,6 @@ $menuItems = [
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Atribuir Usuário a Grupo</title>
     <link rel="stylesheet" href="<?php echo BASE_URL; ?>/css/assign_user_group.css">
     <link rel="stylesheet" href="<?php echo BASE_URL; ?>/css/sidebar.css">
     <link rel="stylesheet" href="<?php echo BASE_URL; ?>/css/header.css">
@@ -55,22 +59,6 @@ $menuItems = [
         <?php include __DIR__ . '/../components/header.php'; ?>
 
         <main class="content">
-            <h1>Atribuir Usuário a Grupo</h1>
-
-            <?php if (isset($_SESSION['success_message'])): ?>
-                <div class="alert alert-success" id="success-message">
-                    <?= htmlspecialchars($_SESSION['success_message']) ?>
-                </div>
-                <?php unset($_SESSION['success_message']); ?>
-            <?php endif; ?>
-
-            <?php if (isset($_SESSION['error_message'])): ?>
-                <div class="alert alert-danger">
-                    <?= htmlspecialchars($_SESSION['error_message']) ?>
-                </div>
-                <?php unset($_SESSION['error_message']); ?>
-            <?php endif; ?>
-
             <form action="<?php echo BASE_URL; ?>/assign-user-group" method="post" class="assign-form">
                 <div class="form-group">
                     <label for="group">Selecione o Grupo:</label>
@@ -92,6 +80,23 @@ $menuItems = [
 
                 <button type="submit" class="btn-submit">Atribuir Usuário ao Grupo</button>
             </form>
+
+            <!-- Exibir mensagens de sucesso ou erro -->
+            <div class="alert-container" style="margin-top: 20px; max-width: 400px; margin-left: auto; margin-right: auto;">
+                <?php if (isset($_SESSION['success_message'])): ?>
+                    <p class="alert success-message" style="color:#28a745; padding:10px; margin:0; border-radius:4px; background-color:rgba(40,167,69,0.1); text-align:center; font-size: 14px;">
+                        <?php echo $_SESSION['success_message']; ?>
+                    </p>
+                    <?php unset($_SESSION['success_message']); ?>
+                <?php endif; ?>
+
+                <?php if (isset($_SESSION['error_message'])): ?>
+                    <p class="alert error-message" style="color:#dc3545; padding:10px; margin:0; border-radius:4px; background-color:rgba(220,53,69,0.1); text-align:center; font-size: 14px;">
+                        <?php echo $_SESSION['error_message']; ?>
+                    </p>
+                    <?php unset($_SESSION['error_message']); ?>
+                <?php endif; ?>
+            </div>
 
             <h2>Grupos Existentes</h2>
             <div class="summary-cards">

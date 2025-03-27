@@ -34,6 +34,9 @@ $servidorController = new ServidorController($pdo, $authController);
 $userGroup = $servidorController->getAssignedGroup($_SESSION['user_id']);
 $hasGroup = !empty($userGroup);
 
+// Obter dados de produtividade do usuário
+$productivityData = $servidorController->getUserTotalProductivity($_SESSION['user_id']);
+
 // Definir os itens de menu para esta página
 $menuItems = [
     ['url' => 'dashboard-servidor', 'icon' => 'fas fa-home', 'text' => 'Início'],
@@ -44,6 +47,7 @@ $menuItems = [
 
 // Definir o título da página
 $pageTitle = "Dashboard do Servidor";
+
 ?>
 
 <!DOCTYPE html>
@@ -51,7 +55,6 @@ $pageTitle = "Dashboard do Servidor";
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $pageTitle; ?> - Sistema de Produtividade</title>
     <link rel="stylesheet" href="<?php echo BASE_URL; ?>/css/dashboard.css">
     <link rel="stylesheet" href="<?php echo BASE_URL; ?>/css/sidebar.css">
     <link rel="stylesheet" href="<?php echo BASE_URL; ?>/css/header.css">
@@ -65,55 +68,65 @@ $pageTitle = "Dashboard do Servidor";
     <div class="main-content">
         <?php include __DIR__ . '/../components/header.php'; ?>
 
-        <main class="dashboard">
-            <section class="dashboard-summary">
-                <h2>Resumo de Produtividade</h2>
-                <div class="summary-cards">
-                    <div class="card">
-                        <h3>Pontos Acumulados</h3>
-                        <p class="big-number"><?php echo number_format($dashboardData['totalPoints'] ?? 0); ?></p>
-                    </div>
-                    <div class="card">
-                        <h3>Processos Concluídos</h3>
-                        <p class="big-number"><?php echo number_format($dashboardData['completedProcesses'] ?? 0); ?></p>
-                    </div>
-                    <div class="card">
-                        <h3>Eficiência</h3>
-                        <p class="big-number"><?php echo number_format($dashboardData['efficiency'] ?? 0, 2); ?>%</p>
-                    </div>
+        <section class="monthly-productivity">
+            <h2>Minha Produtividade Mensal</h2>
+            <div class="year-selector">
+                <label for="yearSelect">Ano:</label>
+                <select id="yearSelect">
+                    <?php
+                    $currentYear = date('Y');
+                    for ($year = 2020; $year <= 2050; $year++) {
+                        $selected = $year == $currentYear ? 'selected' : '';
+                        echo "<option value='$year' $selected>$year</option>";
+                    }
+                    ?>
+                </select>
+            </div>
+            <div class="months-container">
+                <?php
+                $months = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
+                $currentMonth = date('n');
+                foreach ($months as $index => $month) {
+                    $monthNumber = $index + 1;
+                    $class = $monthNumber == $currentMonth ? 'current' : ($monthNumber < $currentMonth ? 'past' : 'future');
+                    echo "<div class='month $class' data-month='$monthNumber'>$month</div>";
+                }
+                ?>
+            </div>
+            <div class="summary-cards">
+                <div class="card">
+                    <h3>Meus Pontos</h3>
+                    <p class="big-number" id="totalPoints"><?php echo $productivityData['totalPoints'] ?? '-'; ?></p>
                 </div>
-            </section>
+                <div class="card">
+                    <h3>Meus Processos</h3>
+                    <p class="big-number" id="totalProcesses"><?php echo $productivityData['completedProcesses'] ?? '-'; ?></p>
+                </div>
+            </div>
+        </section>
 
-            <section class="dashboard-chart">
-                <h2>Produtividade Mensal</h2>
-                <div class="chart-container">
-                    <canvas id="productivityChart"></canvas>
+        <section class="dashboard-activities">
+            <h2>Atividades Recentes</h2>
+            <div class="activities-container">
+                <table id="activitiesTable">
+                    <thead>
+                    <tr>
+                        <th>Processo</th>
+                        <th>Tipo de Minuta</th>
+                        <th>Tipo de Decisão</th>
+                        <th>Pontos</th>
+                        <th>Data</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <!-- Dados serão carregados via JavaScript -->
+                    </tbody>
+                </table>
+                <div id="pagination" class="pagination">
+                    <!-- Paginação será carregada via JavaScript -->
                 </div>
-            </section>
-
-            <section class="dashboard-activities">
-                <h2>Atividades Recentes</h2>
-                <div class="activities-container">
-                    <table id="activitiesTable">
-                        <thead>
-                        <tr>
-                            <th>Processo</th>
-                            <th>Tipo de Minuta</th>
-                            <th>Tipo de Decisão</th>
-                            <th>Pontos</th>
-                            <th>Data</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <!-- Dados serão carregados via JavaScript -->
-                        </tbody>
-                    </table>
-                    <div id="pagination" class="pagination">
-                        <!-- Paginação será carregada via JavaScript -->
-                    </div>
-                </div>
-            </section>
-        </main>
+            </div>
+        </section>
     </div>
 </div>
 
@@ -269,6 +282,60 @@ $pageTitle = "Dashboard do Servidor";
         initProductivityChart(<?php echo json_encode($dashboardData['monthlyProductivity'] ?? []); ?>);
         setupMeuGrupoLink();
     });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const monthButtons = document.querySelectorAll('.month-button');
+        monthButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                // Remover a classe de todos os botões
+                monthButtons.forEach(btn => btn.classList.remove('selected-month'));
+                // Adicionar a classe ao botão clicado
+                this.classList.add('selected-month');
+            });
+        });
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const monthElements = document.querySelectorAll('.month');
+        monthElements.forEach(month => {
+            month.addEventListener('click', function() {
+                // Remover a classe 'selected' de todos os meses
+                monthElements.forEach(m => m.classList.remove('selected'));
+                // Adicionar a classe 'selected' ao mês clicado
+                this.classList.add('selected');
+
+                // Obter o número do mês selecionado
+                const selectedMonth = this.getAttribute('data-month');
+
+                // Carregar dados para o mês selecionado
+                loadMonthlyData(selectedMonth);
+            });
+        });
+
+        // Carregar dados para o mês atual ao carregar a página
+        const currentMonthElement = document.querySelector('.month.current');
+        if (currentMonthElement) {
+            currentMonthElement.click();
+        }
+    });
+
+    function loadMonthlyData(selectedMonth) {
+        const selectedYear = document.getElementById('yearSelect').value;
+        fetch(`${BASE_URL}/get-monthly-data?year=${selectedYear}&month=${selectedMonth}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('totalPoints').textContent = data.data.totalPoints;
+                    document.getElementById('totalProcesses').textContent = data.data.totalProcesses;
+                } else {
+                    console.error('Erro ao carregar dados mensais:', data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao carregar dados mensais:', error);
+            });
+    }
+
 </script>
 
 </body>

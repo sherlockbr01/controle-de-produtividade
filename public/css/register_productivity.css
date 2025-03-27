@@ -41,9 +41,12 @@ body {
 label {
     margin-bottom: 5px;
     font-weight: bold;
+    color: #ffffff;
 }
 
 input[type="text"],
+input[type="email"],
+input[type="password"],
 input[type="date"],
 select {
     width: 100%;
@@ -54,20 +57,24 @@ select {
     color: #ffffff;
 }
 
+input::placeholder {
+    color: #b9bbbe;
+}
+
 .btn-register {
-    background-color: #7289da; /* Cor azul-violeta */
+    background-color: #7289da;
     color: white;
     padding: 10px 20px;
     border: none;
     border-radius: 5px;
     cursor: pointer;
     transition: background-color 0.3s;
-    align-self: flex-start; /* Alinha o botão à esquerda */
-    margin-top: 20px;
+    align-self: flex-start;
+    margin-bottom: 5px;
 }
 
 .btn-register:hover {
-    background-color: #5b6eae; /* Cor mais escura para o hover */
+    background-color: #5b6eae;
 }
 
 /* Botão de adicionar */
@@ -78,7 +85,7 @@ select {
     font-size: 1.2em;
 }
 
-/* Modal (mantido do código original) */
+/* Modal */
 .modal {
     display: none;
     position: fixed;
@@ -143,35 +150,26 @@ select {
     text-decoration: none;
 }
 
-/* Alertas */
+/* Novas regras para mensagens */
 .alert-container {
-    margin-top: 20px;
     width: 100%;
     max-width: 400px;
 }
 
-.alert {
-    padding: 15px;
-    margin-bottom: 20px;
-    border: 1px solid transparent;
+.success-message,
+.error-message {
+    margin-top: 5px;
+    padding: 10px;
     border-radius: 4px;
-    text-align: center;
-    opacity: 1;
-    transition: opacity 0.5s ease-in-out;
+    font-weight: bold;
 }
 
-.alert-success {
-    color: #155724;
-    background-color: #d4edda;
-    border-color: #c3e6cb;
+.success-message {
+    color: #28a745;
+    background-color: rgba(40, 167, 69, 0.1);
 }
 
-.alert-danger {
-    color: #721c24;
-    background-color: #f8d7da;
-    border-color: #f5c6cb;
-}
-
-.alert.fade-out {
-    opacity: 0;
+.error-message {
+    color: #dc3545;
+    background-color: rgba(220, 53, 69, 0.1);
 }

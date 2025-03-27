@@ -27,28 +27,73 @@ body {
     background-color: #36393f;
 }
 
-.dashboard {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 20px;
+/* Estilo para o resumo de produtividade */
+.productivity-summary {
+    background-color: #2c2f33;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 40px;
 }
 
-.dashboard-summary {
-    grid-column: span 2;
+.year-selector {
+    text-align: right;
+    margin-bottom: 10px;
+}
+
+.year-selector select {
+    background-color: #36393f;
+    color: #ffffff;
+    border: 1px solid #4a4d52;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.months-container {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    gap: 0.5rem;
+}
+
+.month {
+    cursor: pointer;
+    padding: 5px 10px;
+    border: 1px solid #4a4d52;
+    border-radius: 5px;
+    background-color: #36393f;
+    transition: background-color 0.3s, transform 0.2s;
+    flex-grow: 1;
+    text-align: center;
+}
+
+.month:hover {
+    background-color: #4a4d52;
+    transform: translateY(-2px);
+}
+
+.month.active {
+    background-color: #7289da;
+    color: #ffffff;
+    font-weight: bold;
+}
+
+.month.current {
+    border: 2px solid #7289da;
 }
 
 .summary-cards {
     display: flex;
     justify-content: space-between;
+    gap: 20px;
 }
 
 .card {
-    background-color: #2c2f33;
+    background-color: #36393f;
     padding: 20px;
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     flex: 1;
-    margin: 0 10px;
     text-align: center;
 }
 
@@ -63,103 +108,100 @@ body {
     color: #7289da;
 }
 
-.nav-button {
-    background-color: #ff4c4c;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    margin: 10px;
-    cursor: pointer;
-    border-radius: 5px;
-    font-size: 16px;
+/* Estilos para o gráfico de produtividade por grupo */
+.group-productivity {
+    margin-top: 40px;
+    height: 400px;
+    margin-bottom: 20px;
+}
+
+#groupProductivityChart {
+    max-height: 100%;
+    width: 100%;
+}
+
+/* Ajustes para layout responsivo */
+@media (max-width: 768px) {
+    .months-container {
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+
+    .month {
+        flex-basis: calc(25% - 5px);
+    }
+
+    .summary-cards {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 480px) {
+    .month {
+        flex-basis: calc(33.333% - 5px);
+    }
+}
+
+/* Estilo para a tabela de atividades */
+#activitiesTable {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-top: 20px;
+    background-color: #2c2f33;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+#activitiesTable th, #activitiesTable td {
+    padding: 12px 15px;
+    text-align: left;
+    color: #ffffff;
+}
+
+#activitiesTable th {
+    background-color: #36393f;
+    color: #ffffff;
+    font-weight: bold;
+}
+
+#activitiesTable tr:nth-child(even) {
+    background-color: #3a3d42;
+}
+
+#activitiesTable tr:hover {
+    background-color: #4a4d52;
     transition: background-color 0.3s;
 }
 
-.nav-button:disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
-}
-
-.nav-button:hover:not(:disabled) {
-    background-color: #ff1a1a;
-}
-
+/* Estilo para a paginação */
 .pagination {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.chart-container {
-    background-color: #2c2f33;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    height: 400px;
-}
-
-.dashboard-activities {
-    grid-column: span 2;
-    background-color: #2c2f33;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-.table-responsive {
-    overflow-x: auto;
-}
-
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
-}
-
-th, td {
-    padding: 10px;
-    text-align: left;
-    border-bottom: 1px solid #555;
-}
-
-th {
-    background-color: #23272a;
-    color: #ffffff;
-}
-
-.no-data {
+    margin-top: 10px;
     text-align: center;
-    color: #999;
-    margin-top: 20px;
-}
-.pagination {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-top: 20px;
 }
 
-.pagination-link {
-    color: #ffffff;
-    background-color: #4a4d52;
-    border: 1px solid #6c757d;
+.pagination a, .pagination span {
+    margin: 0 5px;
     padding: 5px 10px;
-    margin: 0 5px;
     text-decoration: none;
-    border-radius: 5px;
-    transition: background-color 0.3s ease;
+    color: #7289da;
+    border: 1px solid #4a4d52;
+    border-radius: 4px;
+    background-color: #2c2f33;
 }
 
-.pagination-link:hover {
-    background-color: #6c757d;
-}
-
-.pagination-link.active {
+.pagination a:hover {
     background-color: #7289da;
-    border-color: #7289da;
+    color: white;
 }
 
-.pagination-ellipsis {
-    color: #ffffff;
-    margin: 0 5px;
+.pagination .active {
+    background-color: #7289da;
+    color: white;
+    border: 1px solid #7289da;
+}
+.month.selected {
+    background-color: #8367C7; /* Cor de azul violeta */
+    color: #fff; /* Cor do texto */
 }

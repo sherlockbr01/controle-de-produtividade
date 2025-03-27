@@ -19,36 +19,81 @@ class DiretorController {
         $this->baseUrl = $this->authController->getBaseUrlForViews();
     }
 
-    public function getDashboardData() {
-        // Exemplo de dados fictícios, substitua com a lógica real
-        return [
-            'totalPoints' => 1000,
-            'totalProcesses' => 150,
-            'averageEfficiency' => 85.5,
-            'topServers' => [
-                ['name' => 'Servidor 1', 'points' => 300, 'processes' => 50, 'efficiency' => 90],
-                ['name' => 'Servidor 2', 'points' => 250, 'processes' => 40, 'efficiency' => 88],
-                // Adicione mais servidores conforme necessário
-            ],
-        ];
-    }
-
-    public function dashboard() {
-        $this->authController->requireDirectorAuth();
-
+    public function dashboard($year = null) {
         $productivity = new Productivity($this->pdo);
+        $groupModel = new Group($this->pdo);
 
-        $totalPoints = $productivity->getTotalPoints();
-        $totalProcesses = $productivity->getTotalProcesses();
+        $year = $year ?? date('Y');
+        $monthlyProductivity = $this->getYearlyProductivity($year);
+
+        $totalPoints = array_sum(array_column($monthlyProductivity, 'totalPoints'));
+        $totalProcesses = array_sum(array_column($monthlyProductivity, 'totalProcesses'));
         $averageEfficiency = $productivity->getAverageEfficiency();
-        $topServers = $productivity->getTopServers(10);
+        $topServers = $productivity->getTopServers(5, $totalPoints);
+        $groupProductivity = $groupModel->getGroupProductivity();
 
         return [
             'totalPoints' => $totalPoints,
             'totalProcesses' => $totalProcesses,
             'averageEfficiency' => $averageEfficiency,
-            'topServers' => $topServers
+            'topServers' => $topServers,
+            'groupProductivity' => $groupProductivity,
+            'monthlyProductivity' => $monthlyProductivity,
+            'currentYear' => $year
         ];
+    }
+
+    public function getDashboardData() {
+        $productivity = new Productivity($this->pdo);
+        $groupModel = new Group($this->pdo);
+
+        $currentYear = date('Y');
+        $monthlyProductivity = $this->getMonthlyProductivity($currentYear);
+
+        $totalPoints = array_sum(array_column($monthlyProductivity, 'totalPoints'));
+        $totalProcesses = array_sum(array_column($monthlyProductivity, 'totalProcesses'));
+        $averageEfficiency = $productivity->getAverageEfficiency();
+        $topServers = $productivity->getTopServers(5, $totalPoints);
+        $groupProductivity = $groupModel->getGroupProductivity();
+
+        return [
+            'totalPoints' => $totalPoints,
+            'totalProcesses' => $totalProcesses,
+            'averageEfficiency' => $averageEfficiency,
+            'topServers' => $topServers,
+            'groupProductivity' => $groupProductivity,
+            'monthlyProductivity' => $monthlyProductivity,
+            'currentYear' => $currentYear
+        ];
+    }
+
+
+    public function getProductivityData($year, $month) {
+        error_log("Ano: $year, Mês: $month"); // Log dos parâmetros de entrada
+
+        $startDate = "$year-$month-01";
+        $endDate = date('Y-m-t', strtotime($startDate));
+
+        error_log("Data inicial: $startDate, Data final: $endDate"); // Log das datas calculadas
+
+        $stmt = $this->pdo->prepare("
+        SELECT SUM(points) as total_points, COUNT(DISTINCT process_number) as total_processes
+        FROM productivity
+        WHERE date BETWEEN :start_date AND :end_date
+        ");
+        $stmt->execute([':start_date' => $startDate, ':end_date' => $endDate]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        error_log("Resultado da consulta: " . print_r($result, true)); // Log do resultado da consulta
+
+        $returnData = [
+            'totalPoints' => $result['total_points'] ?? 0,
+            'totalProcesses' => $result['total_processes'] ?? 0
+        ];
+
+        error_log("Dados retornados: " . print_r($returnData, true)); // Log dos dados retornados
+
+        return $returnData;
     }
 
     public function getGroupDetails($groupId) {
@@ -80,18 +125,6 @@ class DiretorController {
         return $groupData;
     }
 
-    public function showAssignUserToGroupPage() {
-        $this->authController->requireDirectorAuth();
-
-        $groupModel = new Group($this->pdo); // Corrigido de $this->db para $this->pdo
-        $userModel = new User($this->pdo); // Corrigido de $this->db para $this->pdo
-
-        $allGroups = $groupModel->getAllGroups();
-        $allUsers = $userModel->getAllUsers();
-
-        require __DIR__ . '/../views/assign_user_group.php';
-    }
-
     public function assignUserToGroup() {
         $this->authController->requireDirectorAuth();
 
@@ -117,42 +150,6 @@ class DiretorController {
         return [
             'groups' => $groups,
             'users' => $users
-        ];
-    }
-
-    public function generateReports() {
-        $this->authController->requireDirectorAuth();
-
-        $productivity = new Productivity($this->pdo);
-
-        $startDate = $_GET['start_date'] ?? date('Y-m-01');
-        $endDate = $_GET['end_date'] ?? date('Y-m-d');
-
-        $report = $productivity->getReport($startDate, $endDate);
-
-        return [
-            'report' => $report,
-            'startDate' => $startDate,
-            'endDate' => $endDate
-        ];
-    }
-
-    public function viewServerDetails($serverId) {
-        $this->authController->requireDirectorAuth();
-
-        $user = new User($this->pdo);
-        $productivity = new Productivity($this->pdo);
-
-        $serverDetails = $user->findById($serverId);
-        if (!$serverDetails) {
-            return ['error' => 'Servidor não encontrado.'];
-        }
-
-        $productivityDetails = $productivity->getServerProductivity($serverId);
-
-        return [
-            'serverDetails' => $serverDetails,
-            'productivityDetails' => $productivityDetails
         ];
     }
 
@@ -205,5 +202,58 @@ class DiretorController {
         } catch (Exception $e) {
             return ['success' => false, 'error' => 'Erro ao remover usuário do grupo: ' . $e->getMessage()];
         }
+    }
+
+    public function getYearlyProductivity($year) {
+        error_log("Iniciando getYearlyProductivity para o ano: $year");
+        $monthlyProductivity = [];
+
+        for ($month = 1; $month <= 12; $month++) {
+            $startDate = "$year-$month-01";
+            $endDate = date('Y-m-t', strtotime($startDate));
+
+            $stmt = $this->pdo->prepare("
+        SELECT SUM(points) as total_points, COUNT(DISTINCT process_number) as total_processes
+        FROM productivity
+        WHERE created_at BETWEEN :start_date AND :end_date
+        ");
+            $stmt->execute([':start_date' => $startDate, ':end_date' => $endDate . ' 23:59:59']);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            error_log("Resultado para $year-$month: " . json_encode($result));
+
+            $monthlyProductivity[$month] = [
+                'totalPoints' => $result['total_points'] ?? 0,
+                'totalProcesses' => $result['total_processes'] ?? 0
+            ];
+        }
+
+        error_log("Dados finais: " . json_encode($monthlyProductivity));
+        return $monthlyProductivity;
+    }
+
+    private function getMonthlyProductivity($year) {
+        $productivity = new Productivity($this->pdo);
+        $monthlyProductivity = [];
+
+        for ($month = 1; $month <= 12; $month++) {
+            $startDate = "$year-$month-01";
+            $endDate = date('Y-m-t', strtotime($startDate));
+
+            $stmt = $this->pdo->prepare("
+            SELECT SUM(points) as total_points, COUNT(DISTINCT process_number) as total_processes
+            FROM productivity
+            WHERE date BETWEEN :start_date AND :end_date
+        ");
+            $stmt->execute([':start_date' => $startDate, ':end_date' => $endDate]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            $monthlyProductivity[$month] = [
+                'totalPoints' => $result['total_points'] ?? 0,
+                'totalProcesses' => $result['total_processes'] ?? 0
+            ];
+        }
+
+        return $monthlyProductivity;
     }
 }

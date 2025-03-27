@@ -29,6 +29,10 @@ if (!defined('BASE_URL')) {
     define('BASE_URL', getBaseUrl());
 }
 
+function formatarData($data) {
+    return date('d/m/Y', strtotime($data));
+}
+
 if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'servidor') {
     header('Location: ' . BASE_URL . '/login');
     exit;
@@ -65,65 +69,59 @@ $pageTitle = "Registrar Férias ou Afastamento";
     <link rel="stylesheet" href="<?php echo BASE_URL; ?>/css/gestao_ferias_afastamentos.css">
     <link rel="stylesheet" href="<?php echo BASE_URL; ?>/css/sidebar.css">
     <link rel="stylesheet" href="<?php echo BASE_URL; ?>/css/header.css">
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(function() {
-                var successMessage = document.querySelector('.alert-success');
-                var errorMessage = document.querySelector('.alert-danger');
-                if (successMessage) {
-                    successMessage.style.display = 'none';
-                }
-                if (errorMessage) {
-                    errorMessage.style.display = 'none';
-                }
-            }, 5000);
-        });
-    </script>
 </head>
 <body class="ferias-afastamentos-page">
+
 <div class="dashboard-container">
     <?php include_once __DIR__ . '/../components/sidebar.php'; ?>
     <div class="main-content">
-        <?php include_once __DIR__ . '/../components/header.php'; ?>
-
-        <main class="dashboard-content">
-            <?php
-            if (isset($_SESSION['success_message'])) {
-                echo '<div class="alert alert-success">' . htmlspecialchars($_SESSION['success_message']) . '</div>';
-                unset($_SESSION['success_message']);
-            }
-
-            if (isset($_SESSION['error_message'])) {
-                echo '<div class="alert alert-danger">' . htmlspecialchars($_SESSION['error_message']) . '</div>';
-                unset($_SESSION['error_message']);
-            }
-            ?>
+        <div class="header">
+            <?php include_once __DIR__ . '/../components/header.php'; ?>
+        </div>
+        <div class="dashboard-content">
             <section class="register-section">
                 <form action="<?php echo BASE_URL; ?>/submit-ferias-afastamento" method="POST">
-                    <div class="form-group">
-                        <label for="tipo_afastamento">Motivo do Afastamento/Férias:</label>
-                        <select name="tipo_afastamento" id="tipo_afastamento" required>
-                            <?php foreach ($tiposAfastamento as $tipo): ?>
-                                <option value="<?php echo htmlspecialchars($tipo['id']); ?>"><?php echo htmlspecialchars($tipo['descricao']); ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="data_inicio">Data de Início:</label>
-                        <input type="date" name="data_inicio" id="data_inicio" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="data_termino">Data de Término:</label>
-                        <input type="date" name="data_termino" id="data_termino" required>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="tipo_afastamento">Motivo do Afastamento/Férias:</label>
+                            <select name="tipo_afastamento" id="tipo_afastamento" required>
+                                <?php foreach ($tiposAfastamento as $tipo): ?>
+                                    <option value="<?php echo htmlspecialchars($tipo['id']); ?>"><?php echo htmlspecialchars($tipo['descricao']); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="data_inicio">Data de Início:</label>
+                            <input type="date" name="data_inicio" id="data_inicio" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="data_termino">Data de Término:</label>
+                            <input type="date" name="data_termino" id="data_termino" required>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label for="comentario">Motivo (opcional):</label>
                         <textarea name="comentario" id="comentario" rows="3"></textarea>
                     </div>
-                    <div class="form-group">
+                    <div class="form-group button-group">
                         <button type="submit" class="btn-submit">Registrar Afastamento</button>
                     </div>
                 </form>
+                <div class="alert-container" style="display: flex; justify-content: center; align-items: center; height: 60px;">
+                    <?php if (isset($_SESSION['success_message'])): ?>
+                        <p class="success-message" style="color:#28a745;padding:10px;margin:0;border-radius:4px;font-weight:bold;background-color:rgba(40,167,69,0.1);text-align:center;">
+                            <?php echo $_SESSION['success_message']; ?>
+                        </p>
+                        <?php unset($_SESSION['success_message']); ?>
+                    <?php endif; ?>
+
+                    <?php if (isset($_SESSION['error_message'])): ?>
+                        <p class="error-message" style="color:#dc3545;padding:10px;margin:0;border-radius:4px;font-weight:bold;background-color:rgba(220,53,69,0.1);text-align:center;">
+                            <?php echo $_SESSION['error_message']; ?>
+                        </p>
+                        <?php unset($_SESSION['error_message']); ?>
+                    <?php endif; ?>
+                </div>
             </section>
 
             <section class="afastamentos-section">
@@ -141,8 +139,8 @@ $pageTitle = "Registrar Férias ou Afastamento";
                     <?php foreach ($userAfastamentos as $afastamento): ?>
                         <tr>
                             <td><?php echo htmlspecialchars($afastamento['tipo_afastamento']); ?></td>
-                            <td><?php echo htmlspecialchars($afastamento['data_inicio']); ?></td>
-                            <td><?php echo htmlspecialchars($afastamento['data_termino']); ?></td>
+                            <td><?php echo formatarData($afastamento['data_inicio']); ?></td>
+                            <td><?php echo formatarData($afastamento['data_termino']); ?></td>
                             <td><?php echo htmlspecialchars($afastamento['status']); ?></td>
                         </tr>
                     <?php endforeach; ?>
@@ -152,5 +150,29 @@ $pageTitle = "Registrar Férias ou Afastamento";
         </main>
     </div>
 </div>
+<script>
+    // Função para fazer a mensagem desaparecer
+    function fadeOutMessage(messageElement) {
+        var opacity = 1;
+        var timer = setInterval(function() {
+            if (opacity <= 0.1) {
+                clearInterval(timer);
+                messageElement.style.display = 'none';
+            }
+            messageElement.style.opacity = opacity;
+            opacity -= opacity * 0.1;
+        }, 50);
+    }
+
+    // Seleciona todas as mensagens
+    var messages = document.querySelectorAll('.success-message, .error-message');
+
+    // Para cada mensagem, configura um temporizador para fazê-la desaparecer
+    messages.forEach(function(message) {
+        setTimeout(function() {
+            fadeOutMessage(message);
+        }, 7000); // 7000 milissegundos = 7 segundos
+    });
+</script>
 </body>
 </html>

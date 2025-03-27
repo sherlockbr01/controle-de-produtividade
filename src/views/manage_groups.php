@@ -41,17 +41,19 @@ $menuItems = [
     ['url' => 'create-group', 'icon' => 'fas fa-plus-circle', 'text' => 'Criar Grupo'],
     ['url' => 'manage-groups', 'icon' => 'fas fa-users', 'text' => 'Gerenciar Grupos'],
     ['url' => 'assign-user-group', 'icon' => 'fas fa-user-plus', 'text' => 'Atribuir Usuário a Grupo'],
-    ['url' => 'relatorios', 'icon' => 'fas fa-chart-bar', 'text' => 'Relatórios'],
+    ['url' => 'relatorio-detalhado', 'icon' => 'fas fa-chart-bar', 'text' => 'Relatórios'],
     ['url' => 'gerenciar-ferias-afastamento', 'icon' => 'fas fa-calendar-alt', 'text' => 'Férias e Afastamentos']
 ];
-?>
+// Definir o título da página
+$pageTitle = "Gerenciar Grupos";
 
+?>
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerenciar Grupos</title>
+    <title><?php echo $pageTitle; ?></title>
     <link rel="stylesheet" href="<?php echo BASE_URL; ?>/css/manage_groups.css">
     <link rel="stylesheet" href="<?php echo BASE_URL; ?>/css/sidebar.css">
     <link rel="stylesheet" href="<?php echo BASE_URL; ?>/css/header.css">
@@ -64,22 +66,22 @@ $menuItems = [
     <div class="main-content">
         <?php include __DIR__ . '/../components/header.php'; ?>
 
-        <div class="content-wrapper">
-            <h1>Gerenciar Grupos</h1>
-
+        <!-- Exibir mensagens de sucesso ou erro -->
+        <div class="alert-container" style="display: flex; justify-content: center; align-items: center; min-height: 60px; margin-top: 20px;">
             <?php if (isset($_SESSION['success_message'])): ?>
-                <div class="message success-message" id="success-message">
-                    <?= htmlspecialchars($_SESSION['success_message']) ?>
-                </div>
+                <p class="success-message" style="color:#28a745; padding:10px 20px; margin:0; border-radius:4px; font-weight:bold; background-color:rgba(40,167,69,0.1); text-align:center; display:inline-block;">
+                    <?php echo $_SESSION['success_message']; ?>
+                </p>
                 <?php unset($_SESSION['success_message']); ?>
             <?php endif; ?>
 
             <?php if (isset($_SESSION['error_message'])): ?>
-                <div class="message error-message" id="error-message">
-                    <?= htmlspecialchars($_SESSION['error_message']); ?>
-                </div>
+                <p class="error-message" style="color:#dc3545; padding:10px 20px; margin:0; border-radius:4px; font-weight:bold; background-color:rgba(220,53,69,0.1); text-align:center; display:inline-block;">
+                    <?php echo $_SESSION['error_message']; ?>
+                </p>
                 <?php unset($_SESSION['error_message']); ?>
             <?php endif; ?>
+        </div>
 
             <div class="group-list">
                 <h2>Lista de Grupos</h2>
@@ -120,17 +122,19 @@ $menuItems = [
 
 
 <script>
-    // Faz a mensagem de sucesso ou erro desaparecer após 5 segundos
-    setTimeout(function() {
-        var successMessage = document.getElementById('success-message');
-        var errorMessage = document.getElementById('error-message');
-        if (successMessage) {
-            successMessage.style.display = 'none';
-        }
-        if (errorMessage) {
-            errorMessage.style.display = 'none';
-        }
-    }, 5000);
+    // Faz a mensagem de sucesso ou erro desaparecer após 7 segundos
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+            var successMessage = document.querySelector('.success-message');
+            var errorMessage = document.querySelector('.error-message');
+            if (successMessage) {
+                successMessage.style.display = 'none';
+            }
+            if (errorMessage) {
+                errorMessage.style.display = 'none';
+            }
+        }, 7000);
+    });
 
     // Função para abrir o modal de confirmação
     function confirmDelete(groupId, groupName) {

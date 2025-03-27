@@ -5,19 +5,16 @@ if (session_status() === PHP_SESSION_NONE) {
 
 // Verifica se a constante BASE_URL está definida
 if (!defined('BASE_URL')) {
-    // Função para obter a URL base do projeto
     function getBaseUrl() {
         $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://';
         $host = $_SERVER['HTTP_HOST'];
         $scriptName = $_SERVER['SCRIPT_NAME'];
         $dirName = dirname($scriptName);
 
-        // Se estiver na raiz do domínio, retorna apenas o protocolo e host
         if ($dirName == '/' || $dirName == '\\') {
             return $protocol . $host;
         }
 
-        // Remove o segmento '/public' do caminho se estiver presente
         $basePath = $protocol . $host . $dirName;
         if (strpos($basePath, '/public') !== false) {
             $basePath = substr($basePath, 0, strpos($basePath, '/public'));
@@ -30,7 +27,6 @@ if (!defined('BASE_URL')) {
 }
 
 if (isset($_SESSION['user_id'])) {
-    // Redirecionar para o dashboard apropriado com base no tipo de usuário
     if ($_SESSION['user_type'] === 'servidor') {
         header('Location: ' . BASE_URL . '/dashboard-servidor');
     } elseif ($_SESSION['user_type'] === 'diretor') {
@@ -79,11 +75,13 @@ if (isset($_SESSION['user_id'])) {
             <button type="submit" class="btn">Entrar</button>
         </form>
     </div>
-    <p class="auth-link">Não tem uma conta? <a href="<?php echo BASE_URL; ?>/register">Registre-se</a></p>
+    <div class="auth-footer">
+        <p class="auth-link">Não tem uma conta? <a href="<?php echo BASE_URL; ?>/register">Registre-se</a></p>
+        <p class="auth-link">Esqueceu sua senha? <a href="<?php echo BASE_URL; ?>/forgot-password">Recuperar senha</a></p>
+    </div>
 </div>
 
 <script>
-    // Faz a mensagem de sucesso desaparecer após 5 segundos
     setTimeout(function() {
         var successMessage = document.getElementById('success-message');
         if (successMessage) {

@@ -34,7 +34,7 @@ class Group {
     }
 
     public function getUserCountByGroup($groupId) {
-        $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM group_users WHERE group_id = :group_id");
+        $stmt = $this->db->prepare("SELECT COUNT(*) FROM group_users WHERE group_id = :group_id");
         $stmt->execute(['group_id' => $groupId]);
         return $stmt->fetchColumn();
     }
@@ -48,6 +48,18 @@ class Group {
     ");
         $stmt->execute(['user_id' => $userId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getUserGroup($userId)
+    {
+        $stmt = $this->db->prepare("
+        SELECT g.* 
+        FROM groups g
+        JOIN group_users gu ON g.id = gu.group_id
+        WHERE gu.user_id = :userId
+    ");
+        $stmt->execute(['userId' => $userId]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
     public function getGroupMembers($groupId) {
@@ -113,6 +125,27 @@ class Group {
             ':userId' => $userId,
             ':groupId' => $groupId
         ]);
+    }
+
+    public function getGroupProductivity() {
+        $stmt = $this->db->prepare("
+        SELECT 
+            g.id as group_id,
+            g.name as group_name,
+            COALESCE(SUM(p.points), 0) as total_points
+        FROM 
+            groups g
+        LEFT JOIN 
+            group_users gu ON g.id = gu.group_id
+        LEFT JOIN 
+            productivity p ON gu.user_id = p.user_id
+        GROUP BY 
+            g.id, g.name
+        ORDER BY 
+            total_points DESC
+    ");
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
 

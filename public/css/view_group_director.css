@@ -136,13 +136,6 @@ body {
     color: #ecf0f1;
 }
 
-.error-message {
-    color: #e74c3c;
-    text-align: center;
-    margin-top: 20px;
-    font-size: 18px;
-}
-
 .btn-remove {
     background-color: #e74c3c;
     color: #fff;
@@ -157,15 +150,6 @@ body {
 
 .btn-remove:hover {
     background-color: #c0392b;
-}
-
-.success-message {
-    background-color: #28a745;
-    color: #ffffff;
-    padding: 10px;
-    border-radius: 5px;
-    text-align: center;
-    margin-bottom: 20px;
 }
 
 .modal {

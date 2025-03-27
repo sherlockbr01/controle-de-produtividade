@@ -46,9 +46,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // Definir os itens de menu para esta página
 $menuItems = [
     ['url' => 'dashboard-diretor', 'icon' => 'fas fa-home', 'text' => 'Início'],
+    ['url' => 'create-group', 'icon' => 'fas fa-plus-circle', 'text' => 'Criar Grupo'],
     ['url' => 'manage-groups', 'icon' => 'fas fa-users', 'text' => 'Gerenciar Grupos'],
     ['url' => 'assign-user-group', 'icon' => 'fas fa-user-plus', 'text' => 'Atribuir Usuário a Grupo'],
+    ['url' => 'relatorio-detalhado', 'icon' => 'fas fa-chart-bar', 'text' => 'Relatórios'],
+    ['url' => 'gerenciar-ferias-afastamento', 'icon' => 'fas fa-calendar-alt', 'text' => 'Férias e Afastamentos']
 ];
+// Definir o título da página
+$pageTitle = "Criar grupo";
 ?>
 
 <!DOCTYPE html>
@@ -56,7 +61,6 @@ $menuItems = [
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Criar Novo Grupo</title>
     <link rel="stylesheet" href="<?php echo BASE_URL; ?>/css/create_group.css">
     <link rel="stylesheet" href="<?php echo BASE_URL; ?>/css/sidebar.css">
     <link rel="stylesheet" href="<?php echo BASE_URL; ?>/css/header.css">
@@ -70,23 +74,6 @@ $menuItems = [
         <?php include __DIR__ . '/../components/header.php'; ?>
 
         <main>
-            <h1>Criar Novo Grupo</h1>
-
-            <!-- Exibir mensagens de sucesso ou erro -->
-            <?php if (isset($_SESSION['success_message'])): ?>
-                <div id="success-message" class="alert alert-success">
-                    <?= htmlspecialchars($_SESSION['success_message']) ?>
-                </div>
-                <?php unset($_SESSION['success_message']); ?>
-            <?php endif; ?>
-
-            <?php if (isset($_SESSION['error_message'])): ?>
-                <div id="error-message" class="alert alert-danger">
-                    <?= htmlspecialchars($_SESSION['error_message']) ?>
-                </div>
-                <?php unset($_SESSION['error_message']); ?>
-            <?php endif; ?>
-
             <form action="<?php echo BASE_URL; ?>/create-group" method="post">
                 <div class="form-group">
                     <label for="name">Nome do Grupo:</label>
@@ -98,6 +85,23 @@ $menuItems = [
                 </div>
                 <button type="submit" class="button-submit">Criar Grupo</button>
             </form>
+
+            <!-- Exibir mensagens de sucesso ou erro -->
+            <div class="alert-container" style="display: flex; justify-content: center; align-items: center; height: 60px; margin-top: 20px;">
+                <?php if (isset($_SESSION['success_message'])): ?>
+                    <p class="success-message" style="color:#28a745;padding:10px;margin:0;border-radius:4px;font-weight:bold;background-color:rgba(40,167,69,0.1);text-align:center;">
+                        <?php echo $_SESSION['success_message']; ?>
+                    </p>
+                    <?php unset($_SESSION['success_message']); ?>
+                <?php endif; ?>
+
+                <?php if (isset($_SESSION['error_message'])): ?>
+                    <p class="error-message" style="color:#dc3545;padding:10px;margin:0;border-radius:4px;font-weight:bold;background-color:rgba(220,53,69,0.1);text-align:center;">
+                        <?php echo $_SESSION['error_message']; ?>
+                    </p>
+                    <?php unset($_SESSION['error_message']); ?>
+                <?php endif; ?>
+            </div>
 
             <!-- Exibir grupos existentes em cartões -->
             <h2>Grupos Existentes</h2>
@@ -117,17 +121,28 @@ $menuItems = [
     </div>
 </div>
 <script>
-    // Faz a mensagem de sucesso ou erro desaparecer após 5 segundos
-    setTimeout(function() {
-        var successMessage = document.getElementById('success-message');
-        var errorMessage = document.getElementById('error-message');
-        if (successMessage) {
-            successMessage.style.display = 'none';
-        }
-        if (errorMessage) {
-            errorMessage.style.display = 'none';
-        }
-    }, 5000);
+    // Função para fazer a mensagem desaparecer
+    function fadeOutMessage(messageElement) {
+        var opacity = 1;
+        var timer = setInterval(function() {
+            if (opacity <= 0.1) {
+                clearInterval(timer);
+                messageElement.style.display = 'none';
+            }
+            messageElement.style.opacity = opacity;
+            opacity -= opacity * 0.1;
+        }, 50);
+    }
+
+    // Seleciona todas as mensagens
+    var messages = document.querySelectorAll('.success-message, .error-message');
+
+    // Para cada mensagem, configura um temporizador para fazê-la desaparecer
+    messages.forEach(function(message) {
+        setTimeout(function() {
+            fadeOutMessage(message);
+        }, 7000); // 7000 milissegundos = 7 segundos
+    });
 </script>
 </body>
 </html>

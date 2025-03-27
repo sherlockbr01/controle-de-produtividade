@@ -116,16 +116,16 @@ $menuItems = [
 
                 <div class="alert-container">
                     <?php if (isset($_SESSION['success_message'])): ?>
-                        <div class="alert alert-success" id="success-message">
-                            <?= htmlspecialchars($_SESSION['success_message']); ?>
-                        </div>
+                        <p class="success-message" style="color: #28a745; padding: 10px; margin-bottom: 15px; border-radius: 4px; font-weight: bold;">
+                            <?php echo $_SESSION['success_message']; ?>
+                        </p>
                         <?php unset($_SESSION['success_message']); ?>
                     <?php endif; ?>
 
                     <?php if (isset($_SESSION['error_message'])): ?>
-                        <div class="alert alert-danger" id="error-message">
-                            <?= htmlspecialchars($_SESSION['error_message']); ?>
-                        </div>
+                        <p class="error-message" style="color: #dc3545; padding: 10px; margin-bottom: 15px; border-radius: 4px; font-weight: bold;">
+                            <?php echo $_SESSION['error_message']; ?>
+                        </p>
                         <?php unset($_SESSION['error_message']); ?>
                     <?php endif; ?>
                 </div>
@@ -149,20 +149,7 @@ $menuItems = [
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Funcionalidade para mensagens de alerta
-        var messages = document.querySelectorAll('.alert');
-        messages.forEach(function(message) {
-            setTimeout(function() {
-                message.classList.add('fade-out');
-                setTimeout(function() {
-                    message.style.display = 'none';
-                }, 500);
-            }, 5000);
-        });
-
-
-
-        // Configurar o evento de fechar para o botão X do modal
+       // Configurar o evento de fechar para o botão X do modal
         var closeButtons = document.getElementsByClassName('close');
         for (var i = 0; i < closeButtons.length; i++) {
             closeButtons[i].onclick = function() {
@@ -231,4 +218,27 @@ $menuItems = [
             closeModal('minuteModal');
         }
     }
+
+    // Função para fazer a mensagem desaparecer
+    function fadeOutMessage(messageElement) {
+        var opacity = 1;
+        var timer = setInterval(function() {
+            if (opacity <= 0.1) {
+                clearInterval(timer);
+                messageElement.style.display = 'none';
+            }
+            messageElement.style.opacity = opacity;
+            opacity -= opacity * 0.1;
+        }, 50);
+    }
+
+    // Seleciona todas as mensagens
+    var messages = document.querySelectorAll('.success-message, .error-message');
+
+    // Para cada mensagem, configura um temporizador para fazê-la desaparecer
+    messages.forEach(function(message) {
+        setTimeout(function() {
+            fadeOutMessage(message);
+        }, 7000); // 7000 milissegundos = 7 segundos
+    });
 </script>

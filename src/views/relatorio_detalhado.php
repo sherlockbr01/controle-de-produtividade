@@ -47,8 +47,8 @@ $pageTitle = "Relatório Detalhado";
 $menuItems = [
     ['url' => 'dashboard-diretor', 'icon' => 'fas fa-home', 'text' => 'Início'],
     ['url' => 'manage-groups', 'icon' => 'fas fa-users', 'text' => 'Gerenciar Grupos'],
-    ['url' => 'relatorio-detalhado', 'icon' => 'fas fa-tools', 'text' => 'Gerar Relatórios'],
-    ['url' => 'gerenciar-ferias-afastamento', 'icon' => 'fas fa-calendar-alt', 'text' => 'Gerenciar Férias e Afastamentos']
+    ['url' => 'relatorio-detalhado', 'icon' => 'fas fa-chart-bar', 'text' => 'Relatórios'],
+    ['url' => 'gerenciar-ferias-afastamento', 'icon' => 'fas fa-calendar-alt', 'text' => 'Férias e Afastamentos']
 ];
 ?>
 
@@ -61,7 +61,7 @@ $menuItems = [
     <link rel="stylesheet" href="<?php echo BASE_URL; ?>/css/relatorio.css">
     <link rel="stylesheet" href="<?php echo BASE_URL; ?>/css/sidebar.css">
     <link rel="stylesheet" href="<?php echo BASE_URL; ?>/css/header.css">
-    <link rel="stylesheet" href="<?php echo BASE_URL; ?>/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
 </head>
 <body>
 <div class="dashboard-container">

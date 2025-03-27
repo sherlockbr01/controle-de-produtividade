@@ -2,6 +2,9 @@
 
 namespace Jti30\SistemaProdutividade\Models;
 
+use PDO; // Adicione esta linha no topo do arquivo
+
+
 class User {
     private $db;
 
@@ -10,9 +13,10 @@ class User {
     }
 
     public function findByEmail($email) {
-        $stmt = $this->db->prepare("SELECT * FROM users WHERE email = :email");
-        $stmt->execute(['email' => $email]);
-        return $stmt->fetch();
+        $sql = "SELECT * FROM users WHERE email = ?";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$email]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
     public function findById($id) {
@@ -58,36 +62,109 @@ class User {
     }
 
     public function getProfileData($userId) {
-        $stmt = $this->pdo->prepare("SELECT name, email FROM users WHERE id = ?");
+        $stmt = $this->db->prepare("SELECT * FROM users WHERE id = ?");
         $stmt->execute([$userId]);
+        return $stmt->fetch(\PDO::FETCH_ASSOC);
+    }
+
+    public function updateProfile($userId, $data) {
+        $allowedFields = [
+            'name', 'function', 'birth_date', 'city', 'state', 'country',
+            'bio', 'phone', 'education', 'skills',
+            'interests', 'social_media_links', 'preferred_language'
+        ];
+
+        $setFields = [];
+        $params = [];
+
+        foreach ($allowedFields as $field) {
+            if (isset($data[$field])) {
+                $setFields[] = "$field = :$field";
+                $params[$field] = $data[$field];
+            }
+        }
+
+        if (empty($setFields)) {
+            return false; // No fields to update
+        }
+
+        $setClause = implode(', ', $setFields);
+        $params['user_id'] = $userId;
+
+        $stmt = $this->db->prepare("UPDATE users SET $setClause WHERE id = :user_id");
+        return $stmt->execute($params);
+    }
+
+    public function changePassword($userId, $currentPassword, $newPassword) {
+        // Verifique se a senha atual está correta
+        $stmt = $this->db->prepare("SELECT password FROM users WHERE id = ?");
+        $stmt->execute([$userId]);
+        $user = $stmt->fetch();
+
+        if (!password_verify($currentPassword, $user['password'])) {
+            return false; // Senha atual incorreta
+        }
+
+        // Atualize a senha
+        $newPasswordHash = password_hash($newPassword, PASSWORD_BCRYPT);
+        $stmt = $this->db->prepare("UPDATE users SET password = ? WHERE id = ?");
+        return $stmt->execute([$newPasswordHash, $userId]);
+    }
+
+    public function saveResetCode($userId, $resetCode, $expiryTime) {
+        $sql = "UPDATE users SET reset_code = ?, reset_code_expiry = ? WHERE id = ?";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([$resetCode, $expiryTime, $userId]);
+    }
+
+    public function findByResetCode($resetCode) {
+        $sql = "SELECT * FROM users WHERE reset_code = :reset_code AND reset_expiry > NOW()";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([':reset_code' => $resetCode]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function updateProfile($userId, $name, $email, $currentPassword, $newPassword) {
-        try {
-            // Verifique se a senha atual está correta
-            $stmt = $this->db->prepare("SELECT password FROM users WHERE id = ?");
-            $stmt->execute([$userId]);
-            $user = $stmt->fetch();
-
-            if (!password_verify($currentPassword, $user['password'])) {
-                return false; // Senha atual incorreta
-            }
-
-            // Atualize o nome e o email
-            $stmt = $this->db->prepare("UPDATE users SET name = ?, email = ? WHERE id = ?");
-            $stmt->execute([$name, $email, $userId]);
-
-            // Atualize a senha, se fornecida
-            if (!empty($newPassword)) {
-                $newPasswordHash = password_hash($newPassword, PASSWORD_BCRYPT);
-                $stmt = $this->db->prepare("UPDATE users SET password = ? WHERE id = ?");
-                $stmt->execute([$newPasswordHash, $userId]);
-            }
-
-            return true;
-        } catch (\PDOException $e) {
-            return false;
-        }
+    public function isResetCodeValid($userId, $resetCode) {
+        $sql = "SELECT COUNT(*) FROM users WHERE id = :id AND reset_code = :reset_code AND reset_expiry > NOW()";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([':id' => $userId, ':reset_code' => $resetCode]);
+        return $stmt->fetchColumn() > 0;
     }
+
+    public function updatePassword($userId, $newPassword) {
+        $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
+        $sql = "UPDATE users SET password = :password, reset_code = NULL, reset_expiry = NULL WHERE id = :id";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([
+            ':password' => $hashedPassword,
+            ':id' => $userId
+        ]);
+    }
+
+    public function clearResetCode($userId) {
+        $sql = "UPDATE users SET reset_code = NULL, reset_expiry = NULL WHERE id = :id";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([':id' => $userId]);
+    }
+
+    public function resetPassword($resetCode, $newPassword) {
+        // Verificar se o código de reset é válido e não expirou
+        $stmt = $this->db->prepare("SELECT id FROM users WHERE reset_code = ? AND reset_code_expiry > NOW()");
+        $stmt->execute([$resetCode]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($user) {
+            $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
+
+            // Atualizar a senha do usuário e limpar o código de reset
+            $updateStmt = $this->db->prepare("UPDATE users SET password = ?, reset_code = NULL, reset_code_expiry = NULL WHERE id = ?");
+            $success = $updateStmt->execute([$hashedPassword, $user['id']]);
+
+            return $success;
+        }
+
+        return false;
+    }
+
 }
+

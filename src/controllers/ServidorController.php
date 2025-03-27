@@ -140,23 +140,18 @@ class ServidorController {
         $offset = ($currentPage - 1) * $limit;
 
         try {
-            $productivityData = $productivity->getProductivityByUserId($userId);
-            $recentActivities = $productivity->getRecentActivities($userId, $limit, $offset);
-            $monthlyProductivity = $productivity->getMonthlyProductivity($userId);
+            // Obter dados de produtividade do usuário
+            $productivityData = $productivity->getUserTotalProductivity($userId);
+
+            // Obter atividades recentes
+            $recentActivities = $productivity->getRecentActivities($userId);
             $totalActivities = $productivity->getTotalActivities($userId);
-
-            $efficiency = isset($productivityData['averagePoints']) && $productivityData['averagePoints'] > 0
-                ? ($productivityData['totalPoints'] / ($productivityData['completedProcesses'] * $productivityData['averagePoints'])) * 100
-                : 0;
-
             $totalPages = ceil($totalActivities / $limit);
 
             return [
                 'totalPoints' => $productivityData['totalPoints'] ?? 0,
                 'completedProcesses' => $productivityData['completedProcesses'] ?? 0,
-                'efficiency' => $efficiency,
                 'recentActivities' => $recentActivities,
-                'monthlyProductivity' => $monthlyProductivity,
                 'currentPage' => $currentPage,
                 'totalPages' => $totalPages,
                 'totalActivities' => $totalActivities,
@@ -166,9 +161,7 @@ class ServidorController {
             return [
                 'totalPoints' => 0,
                 'completedProcesses' => 0,
-                'efficiency' => 0,
                 'recentActivities' => [],
-                'monthlyProductivity' => [],
                 'currentPage' => 1,
                 'totalPages' => 1,
                 'totalActivities' => 0,
@@ -351,6 +344,7 @@ class ServidorController {
     }
 
 
+
     public function addDecisionType() {
         $this->authController->requireServerAuth();
 
@@ -379,4 +373,73 @@ class ServidorController {
             'baseUrl' => $this->baseUrl
         ];
     }
+
+    public function getUserProductivity($year, $month) {
+        $userId = $_SESSION['user_id'];
+        $startDate = "$year-$month-01";
+        $endDate = date('Y-m-t', strtotime($startDate));
+
+        $stmt = $this->pdo->prepare("
+    SELECT 
+        SUM(points) as totalPoints,
+        COUNT(id) as totalProcesses
+    FROM productivity
+    WHERE user_id = :userId
+    AND created_at BETWEEN :startDate AND :endDate
+    ");
+        $stmt->execute([
+            ':userId' => $userId,
+            ':startDate' => $startDate,
+            ':endDate' => $endDate
+        ]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return [
+            'totalPoints' => $result['totalPoints'] ?? 0,
+            'totalProcesses' => $result['totalProcesses'] ?? 0
+        ];
+    }
+
+    private function calculateEfficiency($userId, $userPoints, $year, $month) {
+        // Implementação simplificada do cálculo de eficiência
+        // Você pode ajustar isso conforme necessário
+        $stmt = $this->pdo->prepare("
+        SELECT AVG(points) as avgPoints
+        FROM productivity
+        WHERE YEAR(created_at) = :year AND MONTH(created_at) = :month
+    ");
+        $stmt->execute([':year' => $year, ':month' => $month]);
+        $avgPoints = $stmt->fetchColumn();
+
+        if ($avgPoints > 0) {
+            return ($userPoints / $avgPoints) * 100;
+        }
+        return 0;
+    }
+
+    public function getUserTotalProductivity($userId) {
+        try {
+            $query = "SELECT SUM(points) as totalPoints, COUNT(id) as completedProcesses
+                  FROM productivity
+                  WHERE user_id = :userId";
+
+            $stmt = $this->pdo->prepare($query);
+            $stmt->execute([':userId' => $userId]);
+
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            return [
+                'totalPoints' => $result['totalPoints'] ?? 0,
+                'completedProcesses' => $result['completedProcesses'] ?? 0
+            ];
+        } catch (Exception $e) {
+            // Log do erro ou tratamento adicional
+            return [
+                'totalPoints' => 0,
+                'completedProcesses' => 0,
+                'error' => 'Erro ao obter dados de produtividade: ' . $e->getMessage()
+            ];
+        }
+    }
+
 }

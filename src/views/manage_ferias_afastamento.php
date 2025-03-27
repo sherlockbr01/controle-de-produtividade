@@ -82,7 +82,6 @@ function isAfastamentoFuturo($dataInicio) {
     $inicioAfastamento = new DateTime($dataInicio);
     return $inicioAfastamento > $hoje;
 }
-
 ?>
 
 <!DOCTYPE html>
@@ -90,7 +89,6 @@ function isAfastamentoFuturo($dataInicio) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo htmlspecialchars($pageTitle); ?></title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="stylesheet" href="<?php echo BASE_URL; ?>/css/manage_ferias_afastamento.css">
     <link rel="stylesheet" href="<?php echo BASE_URL; ?>/css/sidebar.css">
@@ -104,9 +102,7 @@ function isAfastamentoFuturo($dataInicio) {
         <?php include __DIR__ . '/../components/header.php'; ?>
 
         <main class="dashboard-content">
-            <div class="page-title">
-                <h1><?php echo htmlspecialchars($pageTitle); ?></h1>
-            </div>
+
             <section class="summary-cards">
                 <div class="card">
                     <h3>Solicitações Pendentes</h3>

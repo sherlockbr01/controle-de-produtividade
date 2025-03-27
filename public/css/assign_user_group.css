@@ -55,9 +55,7 @@ body {
 }
 
 form {
-    background-color: #2f3136;
-    padding: 20px;
-    border-radius: 8px;
+    padding: 0;
     margin-bottom: 20px;
 }
 
@@ -92,23 +90,6 @@ button[type="submit"] {
 
 button[type="submit"]:hover {
     background-color: #5b6eae;
-}
-
-.alert {
-    padding: 10px;
-    margin-bottom: 20px;
-    border-radius: 5px;
-    text-align: center;
-}
-
-.alert-success {
-    background-color: #2ecc71;
-    color: #ffffff;
-}
-
-.alert-danger {
-    background-color: #e74c3c;
-    color: #ffffff;
 }
 
 .summary-cards {
